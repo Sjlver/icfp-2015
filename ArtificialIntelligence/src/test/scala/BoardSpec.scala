@@ -7,7 +7,7 @@ class BoardSpec extends UnitSpec {
     board.loadFromJson("""
       {
         "height":10,
-        "width":10,
+        "width":5,
         "sourceSeeds":[0],
         "units":[{"members":[{"x":0,"y":0}],"pivot":{"x":0,"y":0}},
                  {"members":[{"x":0,"y":0},{"x":2,"y":0}],"pivot":{"x":1,"y":0}},
@@ -28,11 +28,25 @@ class BoardSpec extends UnitSpec {
                  {"members":[{"x":1,"y":0},{"x":0,"y":1},{"x":1,"y":2}],"pivot":{"x":1,"y":1}},
                  {"members":[{"x":1,"y":0},{"x":0,"y":1},{"x":1,"y":2}],"pivot":{"x":1,"y":2}}],
          "id":0,
-         "filled":[],
+         "filled":[
+           {"x": 0, "y": 8},
+           {"x": 1, "y": 8},
+           {"x": 0, "y": 9},
+           {"x": 1, "y": 9},
+           {"x": 4, "y": 8},
+           {"x": 3, "y": 9},
+           {"x": 4, "y": 9}
+         ],
          "sourceLength":100}
     """)
     
     board.height should be (10)
-    board.width should be (10)
+    board.width should be (5)
+    
+    board.grid(0)(0) should be (false)
+    board.grid(3)(8) should be (false)
+    board.grid(0)(8) should be (true)
+    board.grid(3)(9) should be (true)
+    
   }
 }
