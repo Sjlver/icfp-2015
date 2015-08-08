@@ -6,6 +6,7 @@ var configuration = {
     "units":[{"members":[{"x":0,"y":0}],"pivot":{"x":0,"y":0}}],
     "id":1,
     "filled":[{"x":2,"y":4},{"x":3,"y":4},{"x":4,"y":4},{"x":5,"y":4},{"x":6,"y":4},{"x":11,"y":4},{"x":2,"y":5},{"x":8,"y":5},{"x":11,"y":5},{"x":2,"y":6},{"x":11,"y":6},{"x":2,"y":7},{"x":3,"y":7},{"x":4,"y":7},{"x":8,"y":7},{"x":11,"y":7},{"x":2,"y":8},{"x":9,"y":8},{"x":11,"y":8},{"x":2,"y":9},{"x":8,"y":9},{"x":2,"y":10},{"x":3,"y":10},{"x":4,"y":10},{"x":5,"y":10},{"x":6,"y":10},{"x":9,"y":10},{"x":11,"y":10}],
+    "current":{"members":[{"x":8,"y":3}],"pivot":{"x":9,"y":2}},
     "sourceLength":100};
 
 function drawHexagon(Xcenter, Ycenter, size, ctx) {
@@ -21,11 +22,12 @@ function drawHexagon(Xcenter, Ycenter, size, ctx) {
     ctx.restore();
 }
 
-function Board(nrows, ncols, cellSize, filledCells) {
+function Board(nrows, ncols, cellSize, filledCells, currentUnit) {
     this.nrows = nrows;
     this.ncols = ncols;
     this.cellSize = cellSize;
     this.filled = filledCells;
+    this.current = currentUnit;
 
     this.getCellX = function (row, col) {
         if (row%2 == 0)
@@ -39,6 +41,16 @@ function Board(nrows, ncols, cellSize, filledCells) {
     }
 
     this.getCellColor = function(row, col) {
+        if (this.current.pivot.x == col &&
+            this.current.pivot.y == row) {
+            return '#9933ff';
+        }
+        for (var i = 0; i < this.current.members.length; ++i) {
+            if (this.current.members[i].x == col &&
+                this.current.members[i].y == row) {
+                return '#cc9900';
+            }
+        }
         for (var i = 0; i < this.filled.length; ++i) {
             if (this.filled[i].x == col &&
                 this.filled[i].y == row)
@@ -83,7 +95,7 @@ function draw() {
         var nrows = configuration.height, ncols = configuration.width;
         var ctx = canvas.getContext('2d');
         var cellSize = Math.min(canvas.width/(ncols+1), canvas.height/nrows);
-        var b = new Board(nrows, ncols, cellSize, configuration.filled);
+        var b = new Board(nrows, ncols, cellSize, configuration.filled, configuration.current);
         b.draw(ctx);
     } else {
         alert("Canvas not supported.");
