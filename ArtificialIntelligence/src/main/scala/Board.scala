@@ -69,14 +69,18 @@ class Board {
   
   def doMove(move: Moves.Move) {
     val targetBlock = activeBlock.moved(move)
+
+    // Check for moves that would lead to a repeated situation
     if (pastBlockStates.contains(targetBlock)) {
       throw new InvalidMoveException("Move #" + pastBlockStates.size +
           " of unit #" + numUnitsPlayed +
           "(" + move + ") leads to repeated position")
     }
-    // TODO check for duplicates
+    
     // TODO check for locking
+
     activeBlock = targetBlock
+    pastBlockStates += activeBlock
   }
   
   // Width and height of the board

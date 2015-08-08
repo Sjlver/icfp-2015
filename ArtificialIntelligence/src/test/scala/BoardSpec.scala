@@ -52,18 +52,18 @@ class BoardSpec extends UnitSpec {
     val board = new Board()
     board.fromJson(BOARD_JSON)
     
-    board.activeBlock.template.members should be (Array((-1, 0), (1, 0)))
-    board.activeBlock.pivot should be (2, 0)
+    board.activeBlock.template.members should be (Array(HexCell.fromXY(-1, 0), HexCell.fromXY(1, 0)))
+    board.activeBlock.pivot should be (HexCell.fromXY(2, 0))
     board.activeBlock.rotation should be (0)
     
     board.doMove(Moves.SE)
-    board.activeBlock.template.members should be (Array((-1, 0), (1, 0)))
-    board.activeBlock.pivot should be (2, 1)
+    board.activeBlock.template.members should be (Array(HexCell.fromXY(-1, 0), HexCell.fromXY(1, 0)))
+    board.activeBlock.pivot should be (HexCell.fromXY(2, 1))
     board.activeBlock.rotation should be (0)
     
     board.doMove(Moves.CCW)
-    board.activeBlock.template.members should be (Array((-1, 0), (1, 0)))
-    board.activeBlock.pivot should be (2, 1)
+    board.activeBlock.template.members should be (Array(HexCell.fromXY(-1, 0), HexCell.fromXY(1, 0)))
+    board.activeBlock.pivot should be (HexCell.fromXY(2, 1))
     board.activeBlock.rotation should be (1)
   }
   
