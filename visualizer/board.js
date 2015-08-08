@@ -137,7 +137,36 @@ function draw() {
 }
 
 function drawNextConfig() {
-    ++currentConfigIndex;
-    if (currentConfigIndex < configurations.length)
+    if (currentConfigIndex < configurations.length - 1) {
+        ++currentConfigIndex;
         drawConfig(configurations[currentConfigIndex]);
+    }
+}
+
+function drawPrevConfig() {
+    if (currentConfigIndex > 0) {
+        --currentConfigIndex;
+        drawConfig(configurations[currentConfigIndex]);
+    }
+}
+
+function getChar(event) {
+  if (event.which == null) { // IE
+    if (event.keyCode < 32) return null; // a special symbol
+    return String.fromCharCode(event.keyCode)
+  }
+
+  if (event.which != 0 && event.charCode != 0) { // !IE
+    if (event.which < 32) return null; // a specifal symbol
+    return String.fromCharCode(event.which); // others
+  }
+
+  return null; // special symbol
+}
+
+function aKeyPressed(event) {
+    if (getChar(event) == 'j')
+        drawNextConfig();
+    else if (getChar(event) == 'k')
+        drawPrevConfig();
 }

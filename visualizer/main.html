@@ -7,9 +7,10 @@
     </script>
   </head>
   <body onload="draw();">
-      <button onClick="drawNextConfig();"> next </button>
+      <button onkeypress="aKeyPressed(event);" onClick="drawNextConfig();" tabindex=1> next </button>
+      <button onkeypress="aKeyPressed(event);" onClick="drawPrevConfig();" tabindex=2> prev </button>
     <div>
-      <canvas id="hex-board" width="800" height="800"> </canvas>
+      <canvas onkeypress="aKeyPressed(event);" id="hex-board" width="800" height="800"> </canvas>
     </div>
   </body>
 </html>
