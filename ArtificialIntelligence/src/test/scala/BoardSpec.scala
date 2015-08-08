@@ -143,4 +143,37 @@ class BoardSpec extends UnitSpec {
     // Row 3 should now be clear
     0.to(4).foreach { i => board.grid(i)(3) should be (false) }
   }  
+
+  "A Board" should "keep track of score correctly" in {
+    val board = new Board()
+    board.fromJson(BOARD_JSON)
+
+    board.score should be (0)
+    
+    // First block, fill (4, 3) and (3, 1)
+    board.doMove(Moves.SE)
+    board.doMove(Moves.CW)
+    board.doMove(Moves.SE)
+    board.doMove(Moves.E)
+    board.doMove(Moves.E)
+    board.score should be (2)
+    
+    // Second block, fill (0, 3) and (2, 3)
+    board.doMove(Moves.SW)
+    board.doMove(Moves.SW)
+    board.doMove(Moves.SE)
+    board.doMove(Moves.W)
+    board.score should be (4)
+
+    // Third block, fill (1, 3) and (3, 3). Don't lock just yet.
+    board.doMove(Moves.SW)
+    board.doMove(Moves.SE)
+    board.doMove(Moves.SE)
+    board.score should be (4)
+        
+    // Lock and clear!
+    board.doMove(Moves.E)
+    board.score should be (106)
+  }  
+
 }

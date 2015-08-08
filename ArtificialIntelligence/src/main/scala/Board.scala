@@ -97,13 +97,15 @@ class Board {
       affectedLines += cell.y
       grid(cell.x)(cell.y) = true
     }
-    clearFilledLines(affectedLines)
+    val numLinesCleared = clearFilledLines(affectedLines)
+    updateScore(numLinesCleared)
   }
   
-  def clearFilledLines(affectedLines: Iterable[Int]) {
+  // Clears all full lines. Returns the number of lines cleared
+  def clearFilledLines(affectedLines: Iterable[Int]): Int = {
     // Find lines that are really full.
     val linesToClear = affectedLines.filter( y => 0.to(width - 1).forall(x => grid(x)(y)) ).toSet
-    if (linesToClear.isEmpty) return
+    if (linesToClear.isEmpty) return 0
     
     // Clear these lines.
     val lowestLineToClear = linesToClear.max
@@ -121,6 +123,15 @@ class Board {
         0.to(width - 1).foreach { x => grid(x)(y) = false }
       }
     }
+    return numLinesCleared
+  }
+
+  // Updates the score after locking the current block and clearing `ls` lines
+  private def updateScore(ls: Int) {
+    val points = activeBlock.template.members.size + 100 * (1 + ls) * ls / 2
+    val lineBonus = if (lsOld > 1) (lsOld - 1) * points / 20 else 0
+    lsOld = ls
+    score += points + lineBonus
   }
   
   // Converts a move to a detailed string, for debugging mostly.
@@ -181,4 +192,10 @@ class Board {
   // This buffer stores the list of past positions/rotations of the active block.
   // Used to detect invalid moves
   var pastBlockStates = HashSet.empty[Block]
+
+  // The score of the current game
+  var score = 0
+  
+  // The number of lines cleared with the previous block (ls_old from the spec)
+  var lsOld = 0
 }
