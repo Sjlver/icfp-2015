@@ -9,5 +9,5 @@ ArtificialIntelligence:
 - Install Scala IDE from <http://scala-ide.org>
 - Install the ScalaTest Plugin (help > Install new Software > select the Scala
   IDE update site > Scala IDE plugins > ScalaTest
-- Install sbt
-- Try "sbt compile test"
+- Install sbt (`brew install sbt`, or similar)
+- Generate an eclipse project file with `sbt eclipse`
