@@ -46,6 +46,21 @@ function Board(nrows, ncols, cellSize, filledCells, currentUnit) {
     this.filled = filledCells;
     this.current = currentUnit;
 
+    this.table = new Array(this.nrows);
+
+    for (var i = 0; i < this.nrows; ++i) {
+        this.table[i] = new Array(this.ncols);
+        for (var j = 0; j < this.ncols; ++j) {
+            this.table[i][j] = 'empty';
+        }
+    }
+    for (var i = 0; i < this.filled.length; ++i) {
+        this.table[this.filled[i].x][this.filled[i].y] = 'full';
+    }
+    for (var i = 0; i < this.current.members.length; ++i) {
+        this.table[this.current.members[i].x][this.current.members[i].y] = 'occupied';
+    }
+
     this.getCellX = function (row, col) {
         if (row%2 == 0)
             return col*this.cellSize + this.cellSize/1.21;
@@ -58,17 +73,8 @@ function Board(nrows, ncols, cellSize, filledCells, currentUnit) {
     }
 
     this.getCellColor = function(row, col) {
-        for (var i = 0; i < this.current.members.length; ++i) {
-            if (this.current.members[i].x == col &&
-                this.current.members[i].y == row) {
-                return '#cc9900';
-            }
-        }
-        for (var i = 0; i < this.filled.length; ++i) {
-            if (this.filled[i].x == col &&
-                this.filled[i].y == row)
-                return '#dd2211';
-        }
+        if (this.table[col][row] == 'full') return '#dd2211';
+        if (this.table[col][row] == 'occupied') return '#cc9900';
         return '#13c3d3';
     }
 
@@ -94,8 +100,6 @@ function Board(nrows, ncols, cellSize, filledCells, currentUnit) {
     }
 
     this.drawCell = function(row, col, ctx) {
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = '#005555';
         ctx.fillStyle = this.getCellColor(row, col);
         var x = this.getCellX(row, col);
         var y = this.getCellY(row, col);
@@ -104,15 +108,17 @@ function Board(nrows, ncols, cellSize, filledCells, currentUnit) {
             this.drawPivot(x, y, ctx);
         }
         this.labelCell(row, col, x, y, ctx);
-        ctx.stroke();
     }
 
     this.draw = function(ctx) {
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#005555';
         for (var i = 0; i < this.nrows; ++i) {
             for (var j = 0; j < this.ncols; ++j) {
                 this.drawCell(i, j, ctx);
             }
         }
+        ctx.stroke();
     }
 }
 
