@@ -1,5 +1,7 @@
 // A set of cells that can be moved, rotated, ...
 // The task specification calls this a "unit".
+// Pivot position is stored as a tuple of x/y coordinates.
+// Rotation is a number from zero to five. Rotating counter-clockwise increases the value.
 object Block {
   def spawn(template: BlockTemplate, width: Int): Block = {
     // Find the extents of the object
@@ -47,5 +49,12 @@ case class Block(template: BlockTemplate, pivot: (Int, Int), rotation: Int) {
       case Moves.CCW => (rotation + 1) % template.numRotations
       case _ => throw new AssertionError("updatedRotation called with translation")
     }
+  }
+
+  // Transforms the template cells according to the current pivot position and rotation.
+  // Rotation code inspired by
+  // http://www.redblobgames.com/grids/hexagons/#rotation
+  def transformedCells = {
+    template.members
   }
 }

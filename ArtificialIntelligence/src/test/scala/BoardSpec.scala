@@ -67,13 +67,25 @@ class BoardSpec extends UnitSpec {
     board.activeBlock.rotation should be (1)
   }
   
-  "A Board" should "detect moves that lead to repetition" in {
+  "A Board" should "detect translations that lead to repetition" in {
     val board = new Board()
     board.fromJson(BOARD_JSON)
 
     board.doMove(Moves.E)    
     a [board.InvalidMoveException] should be thrownBy {
       board.doMove(Moves.W)
+    }
+  }
+
+  "A Board" should "detect rotations that lead to repetition" in {
+    val board = new Board()
+    board.fromJson(BOARD_JSON)
+
+    board.doMove(Moves.SE)
+    board.doMove(Moves.CW)
+    board.doMove(Moves.CW)
+    a [board.InvalidMoveException] should be thrownBy {
+      board.doMove(Moves.CW)
     }
   }
 }
