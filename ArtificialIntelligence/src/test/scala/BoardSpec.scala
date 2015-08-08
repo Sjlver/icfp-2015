@@ -8,25 +8,8 @@ class BoardSpec extends UnitSpec {
       {
         "height":10,
         "width":5,
-        "sourceSeeds":[0],
-        "units":[{"members":[{"x":0,"y":0}],"pivot":{"x":0,"y":0}},
-                 {"members":[{"x":0,"y":0},{"x":2,"y":0}],"pivot":{"x":1,"y":0}},
-                 {"members":[{"x":0,"y":0},{"x":0,"y":2}],"pivot":{"x":0,"y":1}},
-                 {"members":[{"x":2,"y":0},{"x":0,"y":1},{"x":2,"y":2}],"pivot":{"x":1,"y":1}},
-                 {"members":[{"x":0,"y":0},{"x":1,"y":1},{"x":0,"y":2}],"pivot":{"x":0,"y":1}},
-                 {"members":[{"x":0,"y":0},{"x":1,"y":0}],"pivot":{"x":0,"y":0}},
-                 {"members":[{"x":0,"y":0},{"x":1,"y":0}],"pivot":{"x":1,"y":0}},
-                 {"members":[{"x":0,"y":0},{"x":0,"y":1}],"pivot":{"x":0,"y":0}},
-                 {"members":[{"x":0,"y":0},{"x":0,"y":1}],"pivot":{"x":0,"y":1}},
-                 {"members":[{"x":0,"y":0},{"x":1,"y":0},{"x":2,"y":0}],"pivot":{"x":0,"y":0}},
-                 {"members":[{"x":0,"y":0},{"x":1,"y":0},{"x":2,"y":0}],"pivot":{"x":1,"y":0}},
-                 {"members":[{"x":0,"y":0},{"x":1,"y":0},{"x":2,"y":0}],"pivot":{"x":2,"y":0}},
-                 {"members":[{"x":0,"y":0},{"x":0,"y":1},{"x":0,"y":2}],"pivot":{"x":0,"y":0}},
-                 {"members":[{"x":0,"y":0},{"x":0,"y":1},{"x":0,"y":2}],"pivot":{"x":0,"y":1}},
-                 {"members":[{"x":0,"y":0},{"x":0,"y":1},{"x":0,"y":2}],"pivot":{"x":0,"y":2}},
-                 {"members":[{"x":1,"y":0},{"x":0,"y":1},{"x":1,"y":2}],"pivot":{"x":1,"y":0}},
-                 {"members":[{"x":1,"y":0},{"x":0,"y":1},{"x":1,"y":2}],"pivot":{"x":1,"y":1}},
-                 {"members":[{"x":1,"y":0},{"x":0,"y":1},{"x":1,"y":2}],"pivot":{"x":1,"y":2}}],
+        "sourceSeeds":[17],
+        "units":[{"members":[{"x":0,"y":0},{"x":2,"y":0}],"pivot":{"x":1,"y":0}}],
          "id":0,
          "filled":[
            {"x": 0, "y": 8},
@@ -47,6 +30,14 @@ class BoardSpec extends UnitSpec {
     board.grid(3)(8) should be (false)
     board.grid(0)(8) should be (true)
     board.grid(3)(9) should be (true)
+    
+    board.sourceSeedIndex should be (0)
+    board.numUnitsPlayed should be (0)
+    board.blockIndex should be (0)
+    
+    board.activeBlock.template.members should be (Array((-1, 0), (1, 0)))
+    board.activeBlock.pivot should be (2, 0)
+    board.activeBlock.rotation should be (0)
   }
   
   "A Board" should "write itself to JSON" in {
