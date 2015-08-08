@@ -1,5 +1,5 @@
 # Output files
-/bin/
+target/
 
 # IDE generated
 .cache*

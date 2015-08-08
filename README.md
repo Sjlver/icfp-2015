@@ -1,3 +1,13 @@
 ICFP 2015, Team int4_t
 ======================
 
+Setup
+-----
+
+ArtificialIntelligence:
+
+- Install Scala IDE from <http://scala-ide.org>
+- Install the ScalaTest Plugin (help > Install new Software > select the Scala
+  IDE update site > Scala IDE plugins > ScalaTest
+- Install sbt
+- Try "sbt compile test"
