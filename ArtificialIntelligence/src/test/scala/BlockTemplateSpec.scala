@@ -7,7 +7,7 @@ class BlockTemplateSpec extends UnitSpec {
       "pivot":{"x":1,"y":0}}""".parseJson.asJsObject
     val blockTemplate = BlockTemplate.fromJsonObject(jsonObject)
     
-    blockTemplate.members should be (Array((-1, 0), (1, 0)))
+    blockTemplate.members should be (Array(HexCell.fromXY(-1, 0), HexCell.fromXY(1, 0)))
   }  
 
   "A BlockTemplate" should "know its symmetries (two cells with center pivot)" in {

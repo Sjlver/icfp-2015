@@ -1,3 +1,5 @@
+import spray.json._
+
 // A cell in a hexagonal grid.
 // Inspired by this wonderful page: http://www.redblobgames.com/grids/hexagons/
 
@@ -11,6 +13,13 @@ object HexCell {
     val cx = x - (y - (y&1)) / 2
     val cz = y
     HexCell(cx, cz)
+  }
+
+  def fromJsonObject(jsonObject: JsObject): HexCell = {
+    // We ignore potential invalid JSON, hence the @unchecked.
+    jsonObject.getFields("x", "y") match {
+      case Seq(JsNumber(x), JsNumber(y)) => HexCell.fromXY(x.toInt, y.toInt)
+    }
   }
 }
 

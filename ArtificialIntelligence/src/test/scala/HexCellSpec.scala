@@ -1,3 +1,5 @@
+import spray.json._
+
 class HexCellSpec extends UnitSpec {
   "A HexCell" should "be constructible from x and y coords" in {
     val cell = HexCell.fromXY(1, 2)
@@ -5,6 +7,12 @@ class HexCellSpec extends UnitSpec {
     cell.y should be (2)
     cell.q should be (0)
     cell.r should be (2)
+  }
+
+  "A HexCell" should "read itself from JSON" in {
+    val cell = HexCell.fromJsonObject("""{"x":2,"y":2}""".parseJson.asJsObject)
+    cell.x should be (2)
+    cell.y should be (2)
   }
 
   "A HexCell" should "know how to rotate itself" in {
