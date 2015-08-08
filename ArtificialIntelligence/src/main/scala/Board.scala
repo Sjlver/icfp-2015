@@ -72,17 +72,25 @@ class Board {
 
     // Check for moves that would lead to a repeated situation
     if (pastBlockStates.contains(targetBlock)) {
-      throw new InvalidMoveException("Move #" + pastBlockStates.size +
-          " of unit #" + numUnitsPlayed +
-          "(" + move + ") leads to repeated position")
+      throw new InvalidMoveException(moveToString(move) + " leads to repeated position")
     }
     
+    targetBlock.transformedCells.foreach { cell =>
+      if (cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height) {
+      throw new InvalidMoveException(moveToString(move) + " exits the board")
+      }
+    }
     // TODO check for locking
 
     activeBlock = targetBlock
     pastBlockStates += activeBlock
   }
-  
+
+  // Converts a move to a detailed string, for debugging mostly
+  def moveToString(move: Moves.Move): String = {
+    "Move #" + pastBlockStates.size + " of unit #" + numUnitsPlayed + "(" + move + ")"
+  }
+
   // Width and height of the board
   var height = -1
   var width = -1

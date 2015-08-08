@@ -88,4 +88,14 @@ class BoardSpec extends UnitSpec {
       board.doMove(Moves.CW)
     }
   }
+
+  "A Board" should "detect moves that exit the grid" in {
+    val board = new Board()
+    board.fromJson(BOARD_JSON)
+
+    board.doMove(Moves.E)
+    a [board.InvalidMoveException] should be thrownBy {
+      board.doMove(Moves.E)
+    }
+  }
 }
