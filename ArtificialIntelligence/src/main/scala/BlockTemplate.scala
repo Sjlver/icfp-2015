@@ -5,29 +5,29 @@ object BlockTemplate {
   def fromJsonObject(jsonObject: JsObject): BlockTemplate = {
     // We ignore potential invalid JSON, hence the @unchecked.
     
-    val transformedMembers = ArrayBuffer.empty[(Int, Int)]
-    jsonObject.getFields("pivot") match { case Seq(JsObject(pivot)) =>
-      ((pivot("x"), pivot("y")): @unchecked) match { case (JsNumber(px), JsNumber(py)) =>
-        jsonObject.getFields("members") match { case Seq(JsArray(members)) =>
-          members.foreach { memberObject => (memberObject: @unchecked) match {
-            case JsObject(member) =>
-              ((member("x"), member("y")): @unchecked) match { case (JsNumber(mx), JsNumber(my)) =>
-                transformedMembers += ((mx.toInt - px.toInt, my.toInt - py.toInt))
-              }
-            }
-          }
+    val membersWithPivotAtOrigin = ArrayBuffer.empty[HexCell]
+    jsonObject.getFields("pivot", "members") match { case Seq(JsObject(pivot), JsArray(members)) =>
+      val px = (pivot("x"): @unchecked) match { case JsNumber(x) => x.toInt }
+      val py = (pivot("y"): @unchecked) match { case JsNumber(y) => y.toInt }
+      members.foreach { memberObject => (memberObject: @unchecked) match {
+        case JsObject(member) =>
+          val mx = (member("x"): @unchecked) match { case JsNumber(x) => x.toInt }
+          val my = (member("y"): @unchecked) match { case JsNumber(y) => y.toInt }
+          membersWithPivotAtOrigin += HexCell.fromXY(mx - px, my - py)
         }
       }
     }
     
-    BlockTemplate(transformedMembers.toArray)
+    BlockTemplate(membersWithPivotAtOrigin.toArray)
   }
 }
 
-case class BlockTemplate(members: Array[(Int, Int)]) {
+case class BlockTemplate(members: Array[HexCell]) {
   
   // The number of different rotational positions of this block.
   // Depending on the block symmetry, this can be 1, 2, 3, or 6
   // TODO: issue #1
-  val numRotations = 6
+  val numRotations = {
+    6
+  }
 }

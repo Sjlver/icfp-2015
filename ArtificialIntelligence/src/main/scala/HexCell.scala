@@ -37,4 +37,5 @@ case class HexCell(q: Int, r: Int) {
       case _ => throw new AssertionError("Impossible modulus result: " + angle)
     }  
   }
+  def negated = HexCell(-q, -r)
 }

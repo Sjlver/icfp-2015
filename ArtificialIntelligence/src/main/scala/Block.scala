@@ -8,10 +8,10 @@ object Block {
     var leftMost = Int.MaxValue
     var rightMost = Int.MinValue
     var topMost = Int.MaxValue
-    template.members.foreach { case (x, y) =>
-      leftMost = leftMost.min(x)
-      rightMost = rightMost.max(x)
-      topMost = topMost.min(y)
+    template.members.foreach { case cell =>
+      leftMost = leftMost.min(cell.x)
+      rightMost = rightMost.max(cell.x)
+      topMost = topMost.min(cell.y)
     }
     
     val blockWidth = rightMost - leftMost + 1
@@ -19,26 +19,25 @@ object Block {
     val pivotY = -topMost
     val pivotX = -leftMost + spaceAvailable / 2
     
-    Block(template, (pivotX, pivotY), 0)
+    Block(template, HexCell.fromXY(pivotX, pivotY), 0)
   }
 }
 
-case class Block(template: BlockTemplate, pivot: (Int, Int), rotation: Int) {
+case class Block(template: BlockTemplate, pivot: HexCell, rotation: Int) {
   // Return a new block, translated and rotated according to `move`.
   def moved(move: Moves.Move): Block = {
      move match {
-      case Moves.E | Moves.W | Moves.SE | Moves.SW => Block(template, translateCell(pivot, move), rotation)
+      case Moves.E | Moves.W | Moves.SE | Moves.SW => Block(template, translatedCell(pivot, move), rotation)
       case Moves.CW | Moves.CCW => Block(template, pivot, updatedRotation(move))
     }
   }
   
-  private def translateCell(cell: (Int, Int), move: Moves.Move): (Int, Int) = {
-    val isEvenRow = cell._2 % 2 == 0
+  private def translatedCell(cell: HexCell, move: Moves.Move): HexCell = {
     move match {
-      case Moves.E => (cell._1 + 1, cell._2)
-      case Moves.W => (cell._1 - 1, cell._2)
-      case Moves.SE => (if (isEvenRow) cell._1 else cell._1 + 1, cell._2 + 1)
-      case Moves.SW => (if (isEvenRow) cell._1 - 1 else cell._1, cell._2 + 1)
+      case Moves.E => cell.translated(HexCell(1, 0))
+      case Moves.W => cell.translated(HexCell(-1, 0))
+      case Moves.SE => cell.translated(HexCell(0, 1))
+      case Moves.SW => cell.translated(HexCell(-1, 1))
       case Moves.CW | Moves.CCW => throw new AssertionError("translateCell called with rotation")
     }
   }
@@ -52,9 +51,10 @@ case class Block(template: BlockTemplate, pivot: (Int, Int), rotation: Int) {
   }
 
   // Transforms the template cells according to the current pivot position and rotation.
-  // Rotation code inspired by
-  // http://www.redblobgames.com/grids/hexagons/#rotation
-  def transformedCells = {
-    template.members
+  def transformedCells: Array[HexCell] = {
+    template.members.map { cell =>
+      // Rotate around origin, then translate to pivot position.
+      cell.rotated(rotation).translated(pivot)
+    }
   }
 }
