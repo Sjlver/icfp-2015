@@ -46,6 +46,16 @@ class BoardSpec extends UnitSpec {
     board.activeBlock.template.members should be (Array((-1, 0), (1, 0)))
     board.activeBlock.pivot should be (2, 0)
     board.activeBlock.rotation should be (0)
+    
+    board.doMove(Moves.SE)
+    board.activeBlock.template.members should be (Array((-1, 0), (1, 0)))
+    board.activeBlock.pivot should be (2, 1)
+    board.activeBlock.rotation should be (0)
+    
+    board.doMove(Moves.CCW)
+    board.activeBlock.template.members should be (Array((-1, 0), (1, 0)))
+    board.activeBlock.pivot should be (2, 1)
+    board.activeBlock.rotation should be (1)
   }
   
   "A Board" should "write itself to JSON" in {

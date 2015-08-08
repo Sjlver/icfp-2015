@@ -26,7 +26,8 @@ object BlockTemplate {
 
 class BlockTemplate(val members: Array[(Int, Int)]) {
   
-  // The maximum number of times this block can be rotated in the same direction
+  // The number of different rotational positions of this block.
+  // Depending on the block symmetry, this can be 1, 2, 3, or 6
   // TODO: issue #1
-  val maxRotations = 5
+  val numRotations = 6
 }

@@ -4,6 +4,9 @@ import scala.collection.mutable.ArrayBuffer
 // Contains the game board, does moves, undoes moves, checks validity, computes
 // scores, ...
 class Board {
+  // Thrown when a move would be invalid (i.e., lead to a score of zero according to the specification)
+  class InvalidMoveException extends Exception
+  
   def fromJson(jsonString: String) {
     // We ignore potential invalid JSON, hence the @unchecked.
 
@@ -61,7 +64,14 @@ class Board {
     		}: _*)
     ).compactPrint
   }
-
+  
+  def doMove(move: Moves.Move) {
+    val targetBlock = activeBlock.moved(move)
+    // TODO check for duplicates
+    // TODO check for locking
+    activeBlock = targetBlock
+  }
+  
   // Width and height of the board
   var height = -1
   var width = -1
