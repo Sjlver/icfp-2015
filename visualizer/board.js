@@ -1,5 +1,5 @@
 
-var configuration = {
+var configurations = [{
     "height":15,
     "width":15,
     "sourceSeeds":[0],
@@ -7,7 +7,24 @@ var configuration = {
     "id":1,
     "filled":[{"x":2,"y":4},{"x":3,"y":4},{"x":4,"y":4},{"x":5,"y":4},{"x":6,"y":4},{"x":11,"y":4},{"x":2,"y":5},{"x":8,"y":5},{"x":11,"y":5},{"x":2,"y":6},{"x":11,"y":6},{"x":2,"y":7},{"x":3,"y":7},{"x":4,"y":7},{"x":8,"y":7},{"x":11,"y":7},{"x":2,"y":8},{"x":9,"y":8},{"x":11,"y":8},{"x":2,"y":9},{"x":8,"y":9},{"x":2,"y":10},{"x":3,"y":10},{"x":4,"y":10},{"x":5,"y":10},{"x":6,"y":10},{"x":9,"y":10},{"x":11,"y":10}],
     "current":{"members":[{"x":8,"y":3}],"pivot":{"x":9,"y":2}},
-    "sourceLength":100};
+    "sourceLength":100},{
+    "height":15,
+    "width":15,
+    "sourceSeeds":[0],
+    "units":[{"members":[{"x":0,"y":0}],"pivot":{"x":0,"y":0}}],
+    "id":1,
+    "filled":[{"x":2,"y":4},{"x":3,"y":4},{"x":4,"y":4},{"x":5,"y":4},{"x":6,"y":4},{"x":11,"y":4},{"x":2,"y":5},{"x":8,"y":5},{"x":11,"y":5},{"x":2,"y":6},{"x":11,"y":6},{"x":2,"y":7},{"x":3,"y":7},{"x":4,"y":7},{"x":8,"y":7},{"x":11,"y":7},{"x":2,"y":8},{"x":9,"y":8},{"x":11,"y":8},{"x":2,"y":9},{"x":8,"y":9},{"x":2,"y":10},{"x":3,"y":10},{"x":4,"y":10},{"x":5,"y":10},{"x":6,"y":10},{"x":9,"y":10},{"x":11,"y":10}],
+    "current":{"members":[{"x":8,"y":2}],"pivot":{"x":8,"y":1}},
+    "sourceLength":100},{
+    "height":15,
+    "width":15,
+    "sourceSeeds":[0],
+    "units":[{"members":[{"x":0,"y":0}],"pivot":{"x":0,"y":0}}],
+    "id":1,
+    "filled":[{"x":2,"y":4},{"x":3,"y":4},{"x":4,"y":4},{"x":5,"y":4},{"x":6,"y":4},{"x":11,"y":4},{"x":2,"y":5},{"x":8,"y":5},{"x":11,"y":5},{"x":2,"y":6},{"x":11,"y":6},{"x":2,"y":7},{"x":3,"y":7},{"x":4,"y":7},{"x":8,"y":7},{"x":11,"y":7},{"x":2,"y":8},{"x":9,"y":8},{"x":11,"y":8},{"x":2,"y":9},{"x":8,"y":9},{"x":2,"y":10},{"x":3,"y":10},{"x":4,"y":10},{"x":5,"y":10},{"x":6,"y":10},{"x":9,"y":10},{"x":11,"y":10}],
+    "current":{"members":[{"x":9,"y":2}],"pivot":{"x":8,"y":1}},
+    "sourceLength":100}];
+
 
 function drawHexagon(Xcenter, Ycenter, size, ctx) {
     var numberOfSides = 6;
@@ -41,10 +58,6 @@ function Board(nrows, ncols, cellSize, filledCells, currentUnit) {
     }
 
     this.getCellColor = function(row, col) {
-        if (this.current.pivot.x == col &&
-            this.current.pivot.y == row) {
-            return '#9933ff';
-        }
         for (var i = 0; i < this.current.members.length; ++i) {
             if (this.current.members[i].x == col &&
                 this.current.members[i].y == row) {
@@ -59,6 +72,11 @@ function Board(nrows, ncols, cellSize, filledCells, currentUnit) {
         return '#13c3d3';
     }
 
+    this.isPivot = function(row, col) {
+        return (this.current.pivot.x == col &&
+                this.current.pivot.y == row);
+    }
+
     this.labelCell = function(row, col, x, y, ctx) {
         ctx.font = Math.floor(this.cellSize/4)+"px Arial";
         ctx.fillStyle = '#000000';
@@ -68,6 +86,13 @@ function Board(nrows, ncols, cellSize, filledCells, currentUnit) {
         ctx.fillText(name, x, y);
     }
 
+    this.drawPivot = function(x, y, ctx) {
+        ctx.fillStyle = '#9933ff';
+        ctx.beginPath();
+        ctx.arc(x, y, this.cellSize/3, 0, 2*Math.PI, true);
+        ctx.fill();
+    }
+
     this.drawCell = function(row, col, ctx) {
         ctx.lineWidth = 1;
         ctx.strokeStyle = '#005555';
@@ -75,6 +100,9 @@ function Board(nrows, ncols, cellSize, filledCells, currentUnit) {
         var x = this.getCellX(row, col);
         var y = this.getCellY(row, col);
         drawHexagon(x, y, this.cellSize/1.93, ctx);
+        if (this.isPivot(row, col)) {
+            this.drawPivot(x, y, ctx);
+        }
         this.labelCell(row, col, x, y, ctx);
         ctx.stroke();
     }
@@ -88,7 +116,7 @@ function Board(nrows, ncols, cellSize, filledCells, currentUnit) {
     }
 }
 
-function draw() {
+function drawConfig(configuration) {
     var canvas = document.getElementById('hex-board');
 
     if(canvas.getContext) {
@@ -100,4 +128,16 @@ function draw() {
     } else {
         alert("Canvas not supported.");
     }
+}
+
+var currentConfigIndex = 0;
+
+function draw() {
+    drawConfig(configurations[currentConfigIndex]);
+}
+
+function drawNextConfig() {
+    ++currentConfigIndex;
+    if (currentConfigIndex < configurations.length)
+        drawConfig(configurations[currentConfigIndex]);
 }
