@@ -29,13 +29,13 @@ function Board(nrows, ncols, cellSize, filledCells) {
 
     this.getCellX = function (row, col) {
         if (row%2 == 0)
-            return col*this.cellSize/1.65 + this.cellSize/2;
+            return col*this.cellSize + this.cellSize/1.21;
         else
-            return col*this.cellSize/1.65 + this.cellSize/1.23;
+            return col*this.cellSize + this.cellSize/0.74;
     }
 
     this.getCellY = function (row, col) {
-        return row*this.cellSize/2 + this.cellSize/2;
+        return row*this.cellSize/1.21 + this.cellSize/1.21;
     }
 
     this.getCellColor = function(row, col) {
@@ -48,7 +48,7 @@ function Board(nrows, ncols, cellSize, filledCells) {
     }
 
     this.labelCell = function(row, col, x, y, ctx) {
-        ctx.font = (this.cellSize/6)+"px Arial";
+        ctx.font = Math.floor(this.cellSize/4)+"px Arial";
         ctx.fillStyle = '#000000';
         var name = "(" + col + "," + row + ")";
         ctx.textAlign = "center";
@@ -62,7 +62,7 @@ function Board(nrows, ncols, cellSize, filledCells) {
         ctx.fillStyle = this.getCellColor(row, col);
         var x = this.getCellX(row, col);
         var y = this.getCellY(row, col);
-        drawHexagon(x, y, this.cellSize/3.2, ctx);
+        drawHexagon(x, y, this.cellSize/1.93, ctx);
         this.labelCell(row, col, x, y, ctx);
         ctx.stroke();
     }
