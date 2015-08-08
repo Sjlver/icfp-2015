@@ -11,10 +11,10 @@ var configuration = {
 function drawHexagon(Xcenter, Ycenter, size, ctx) {
     var numberOfSides = 6;
     ctx.beginPath();
-    ctx.moveTo (Xcenter +  size * Math.cos(0), Ycenter +  size *  Math.sin(0));          
+    ctx.moveTo (Xcenter +  size * Math.cos(Math.PI / numberOfSides), Ycenter +  size *  Math.sin(Math.PI / numberOfSides));          
 
     for (var i = 1; i <= numberOfSides;i += 1) {
-        ctx.lineTo (Xcenter + size * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(i * 2 * Math.PI / numberOfSides));
+        ctx.lineTo (Xcenter + size * Math.cos((i * 2 + 1) * Math.PI / numberOfSides), Ycenter + size * Math.sin((i * 2 + 1) * Math.PI / numberOfSides));
     }
     ctx.save();
     ctx.fill();
@@ -25,25 +25,35 @@ function Board(nrows, ncols, cellSize, filledCells) {
     this.nrows = nrows;
     this.ncols = ncols;
     this.cellSize = cellSize;
+    this.filled = filledCells;
 
     this.getCellX = function (row, col) {
-        if (row%2)
-            return col*this.cellSize + this.cellSize/2;
+        if (row%2 == 0)
+            return col*this.cellSize/1.65 + this.cellSize/2;
         else
-            return col*this.cellSize + this.cellSize;
+            return col*this.cellSize/1.65 + this.cellSize/1.23;
     }
 
     this.getCellY = function (row, col) {
-        return row*this.cellSize/3.3 + this.cellSize/2;
+        return row*this.cellSize/2 + this.cellSize/2;
     }
 
     this.getCellColor = function(row, col) {
-        for (var i = 0; i < filledCells.length; ++i) {
-            if (filledCells[i].x == row &&
-                filledCells[i].y == col)
+        for (var i = 0; i < this.filled.length; ++i) {
+            if (this.filled[i].x == col &&
+                this.filled[i].y == row)
                 return '#dd2211';
         }
         return '#13c3d3';
+    }
+
+    this.labelCell = function(row, col, x, y, ctx) {
+        ctx.font = (this.cellSize/6)+"px Arial";
+        ctx.fillStyle = '#000000';
+        var name = "(" + col + "," + row + ")";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(name, x, y);
     }
 
     this.drawCell = function(row, col, ctx) {
@@ -53,12 +63,7 @@ function Board(nrows, ncols, cellSize, filledCells) {
         var x = this.getCellX(row, col);
         var y = this.getCellY(row, col);
         drawHexagon(x, y, this.cellSize/3.2, ctx);
-        ctx.font = (this.cellSize/6)+"px Arial";
-        ctx.fillStyle = '#000000';
-        var name = "(" + row + "," + col + ")";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(name, x, y);
+        this.labelCell(row, col, x, y, ctx);
         ctx.stroke();
     }
 
