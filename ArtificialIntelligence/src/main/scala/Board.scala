@@ -1,11 +1,12 @@
 import spray.json._
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.HashSet
 
 // Contains the game board, does moves, undoes moves, checks validity, computes
 // scores, ...
 class Board {
   // Thrown when a move would be invalid (i.e., lead to a score of zero according to the specification)
-  class InvalidMoveException extends Exception
+  class InvalidMoveException(message: String) extends Exception
   
   def fromJson(jsonString: String) {
     // We ignore potential invalid JSON, hence the @unchecked.
@@ -41,7 +42,8 @@ class Board {
           BlockTemplate.fromJsonObject(unit)
         }).toArray
       }
-     activeBlock = Block.spawn(blocks(blockIndex), width) 
+     activeBlock = Block.spawn(blocks(blockIndex), width)
+     pastBlockStates += activeBlock
     }
   }
   
@@ -67,6 +69,11 @@ class Board {
   
   def doMove(move: Moves.Move) {
     val targetBlock = activeBlock.moved(move)
+    if (pastBlockStates.contains(targetBlock)) {
+      throw new InvalidMoveException("Move #" + pastBlockStates.size +
+          " of unit #" + numUnitsPlayed +
+          "(" + move + ") leads to repeated position")
+    }
     // TODO check for duplicates
     // TODO check for locking
     activeBlock = targetBlock
@@ -96,7 +103,12 @@ class Board {
 
   // This board's random number generator
   var random: DavarRandom = null
-    
+  
+  // The block that is currently active. This is the block that is moved around.
+  // It will become part of the grid once it is locked.
   var activeBlock: Block = null
 
+  // This buffer stores the list of past positions/rotations of the active block.
+  // Used to detect invalid moves
+  var pastBlockStates = HashSet.empty[Block]
 }

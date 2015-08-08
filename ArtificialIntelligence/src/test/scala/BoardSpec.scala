@@ -38,6 +38,15 @@ class BoardSpec extends UnitSpec {
     board.numUnitsPlayed should be (0)
     board.blockIndex should be (0)
   }
+
+  "A Board" should "write itself to JSON" in {
+    val board = new Board
+    board.width = 2
+    board.height = 2
+    board.grid = Array(Array(false, true), Array(false, false))
+    
+    board.toJson should be ("""{"width":2,"height":2,"filled":[{"x":0,"y":1}]}""")
+  }
     
   "A Board" should "should process moves" in {
     val board = new Board()
@@ -58,13 +67,13 @@ class BoardSpec extends UnitSpec {
     board.activeBlock.rotation should be (1)
   }
   
-  "A Board" should "write itself to JSON" in {
-    val board = new Board
-    board.width = 2
-    board.height = 2
-    board.grid = Array(Array(false, true), Array(false, false))
-    
-    board.toJson should be ("""{"width":2,"height":2,"filled":[{"x":0,"y":1}]}""")
+  "A Board" should "detect moves that lead to repetition" in {
+    val board = new Board()
+    board.fromJson(BOARD_JSON)
+
+    board.doMove(Moves.E)    
+    a [board.InvalidMoveException] should be thrownBy {
+      board.doMove(Moves.W)
+    }
   }
-    
 }

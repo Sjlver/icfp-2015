@@ -20,11 +20,11 @@ object BlockTemplate {
       }
     }
     
-    new BlockTemplate(transformedMembers.toArray)
+    BlockTemplate(transformedMembers.toArray)
   }
 }
 
-class BlockTemplate(val members: Array[(Int, Int)]) {
+case class BlockTemplate(members: Array[(Int, Int)]) {
   
   // The number of different rotational positions of this block.
   // Depending on the block symmetry, this can be 1, 2, 3, or 6

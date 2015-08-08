@@ -17,16 +17,16 @@ object Block {
     val pivotY = -topMost
     val pivotX = -leftMost + spaceAvailable / 2
     
-    new Block(template, (pivotX, pivotY), 0)
+    Block(template, (pivotX, pivotY), 0)
   }
 }
 
-class Block(val template: BlockTemplate, var pivot: (Int, Int), var rotation: Int) {
+case class Block(template: BlockTemplate, pivot: (Int, Int), rotation: Int) {
   // Return a new block, translated and rotated according to `move`.
   def moved(move: Moves.Move): Block = {
      move match {
-      case Moves.E | Moves.W | Moves.SE | Moves.SW => new Block(template, translateCell(pivot, move), rotation)
-      case Moves.CW | Moves.CCW => new Block(template, pivot, updatedRotation(move))
+      case Moves.E | Moves.W | Moves.SE | Moves.SW => Block(template, translateCell(pivot, move), rotation)
+      case Moves.CW | Moves.CCW => Block(template, pivot, updatedRotation(move))
     }
   }
   
