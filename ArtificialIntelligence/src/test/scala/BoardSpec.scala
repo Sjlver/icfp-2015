@@ -2,26 +2,29 @@ import scala.collection.mutable.Stack
 
 class BoardSpec extends UnitSpec {
 
+  val BOARD_JSON = """
+    {
+      "height":10,
+      "width":5,
+      "sourceSeeds":[17],
+      "units":[{"members":[{"x":0,"y":0},{"x":2,"y":0}],"pivot":{"x":1,"y":0}}],
+      "id":0,
+      "filled":[
+        {"x": 0, "y": 8},
+        {"x": 1, "y": 8},
+        {"x": 0, "y": 9},
+        {"x": 1, "y": 9},
+        {"x": 4, "y": 8},
+        {"x": 3, "y": 9},
+        {"x": 4, "y": 9}
+      ],
+      "sourceLength":100
+    }
+  """
+  
   "A Board" should "load itself from JSON" in {
     val board = new Board()
-    board.fromJson("""
-      {
-        "height":10,
-        "width":5,
-        "sourceSeeds":[17],
-        "units":[{"members":[{"x":0,"y":0},{"x":2,"y":0}],"pivot":{"x":1,"y":0}}],
-         "id":0,
-         "filled":[
-           {"x": 0, "y": 8},
-           {"x": 1, "y": 8},
-           {"x": 0, "y": 9},
-           {"x": 1, "y": 9},
-           {"x": 4, "y": 8},
-           {"x": 3, "y": 9},
-           {"x": 4, "y": 9}
-         ],
-         "sourceLength":100}
-    """)
+    board.fromJson(BOARD_JSON)
     
     board.height should be (10)
     board.width should be (5)
@@ -34,6 +37,11 @@ class BoardSpec extends UnitSpec {
     board.sourceSeedIndex should be (0)
     board.numUnitsPlayed should be (0)
     board.blockIndex should be (0)
+  }
+    
+  "A Board" should "should process moves" in {
+    val board = new Board()
+    board.fromJson(BOARD_JSON)
     
     board.activeBlock.template.members should be (Array((-1, 0), (1, 0)))
     board.activeBlock.pivot should be (2, 0)

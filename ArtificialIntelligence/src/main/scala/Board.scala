@@ -5,6 +5,8 @@ import scala.collection.mutable.ArrayBuffer
 // scores, ...
 class Board {
   def fromJson(jsonString: String) {
+    // We ignore potential invalid JSON, hence the @unchecked.
+
     val jsonObject = jsonString.parseJson.asJsObject
     jsonObject.getFields("width", "height") match {
       case Seq(JsNumber(w), JsNumber(h)) =>
@@ -25,14 +27,14 @@ class Board {
     
     jsonObject.getFields("sourceSeeds") match {
       case Seq(JsArray(ss)) =>
-        sourceSeeds = ss.map({case JsNumber(s) => s.toInt}).toArray
+        sourceSeeds = ss.map(jsValue => (jsValue: @unchecked) match {case JsNumber(s) => s.toInt}).toArray
     }
     random = new DavarRandom(sourceSeeds(sourceSeedIndex))
     blockIndex = random.next
     
     jsonObject.getFields("units") match {
       case Seq(JsArray(units)) => {
-        blocks = units.map({ case unit: JsObject =>
+        blocks = units.map(unitObject => (unitObject: @unchecked) match { case unit: JsObject =>
           BlockTemplate.fromJsonObject(unit)
         }).toArray
       }
@@ -64,7 +66,7 @@ class Board {
   var height = -1
   var width = -1
   
-  // The grid ((0, 3) is column zero, row three.
+  // The grid ((0, 3) is column zero, row three).
   var grid = Array.ofDim[Boolean](0, 0)
   
   // The current game we're playing
