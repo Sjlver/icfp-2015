@@ -21,10 +21,9 @@ class Board {
     grid = Array.fill[Boolean](width, height)(false)
     jsonObject.getFields("filled") match {
       case Seq(JsArray(cells)) => {
-        cells.foreach { cell =>
-          cell.asJsObject.getFields("x", "y") match {
-            case Seq(JsNumber(x), JsNumber(y)) => grid(x.toInt)(y.toInt) = true
-          }
+        cells.foreach { cellObject =>
+          val cell = HexCell.fromJsonObject(cellObject.asJsObject)
+          grid(cell.x)(cell.y) = true
         }
       }
     }
@@ -34,17 +33,14 @@ class Board {
         sourceSeeds = ss.map(jsValue => (jsValue: @unchecked) match {case JsNumber(s) => s.toInt}).toArray
     }
     random = new DavarRandom(sourceSeeds(sourceSeedIndex))
-    blockIndex = random.next
     
     jsonObject.getFields("units") match {
       case Seq(JsArray(units)) => {
-        blocks = units.map(unitObject => (unitObject: @unchecked) match { case unit: JsObject =>
-          BlockTemplate.fromJsonObject(unit)
-        }).toArray
+        blocks = units.map(unit => BlockTemplate.fromJsonObject(unit.asJsObject)).toArray
       }
-     activeBlock = Block.spawn(blocks(blockIndex), width)
-     pastBlockStates += activeBlock
     }
+
+    spawnNextBlock()
   }
   
   def toJson: String = {
@@ -75,21 +71,54 @@ class Board {
       throw new InvalidMoveException(moveToString(move) + " leads to repeated position")
     }
     
-    targetBlock.transformedCells.foreach { cell =>
-      if (cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height) {
-      throw new InvalidMoveException(moveToString(move) + " exits the board")
-      }
+    // Check for moves the exit the grid
+    if (exitsGrid(targetBlock) || collidesWithFullCell(targetBlock)) {
+      lockBlock()
+      spawnNextBlock()
+      return
     }
-    // TODO check for locking
 
+    // All checks passed, move the target
     activeBlock = targetBlock
     pastBlockStates += activeBlock
   }
 
-  // Converts a move to a detailed string, for debugging mostly
-  def moveToString(move: Moves.Move): String = {
-    "Move #" + pastBlockStates.size + " of unit #" + numUnitsPlayed + "(" + move + ")"
+  private def spawnNextBlock() {
+    numBlocksPlayed += 1
+    blockIndex = random.next
+    activeBlock = Block.spawn(blocks(blockIndex % blocks.size), width)
+    pastBlockStates.clear()
+    pastBlockStates += activeBlock
   }
+  
+  private def lockBlock() {
+    val affectedLines = scala.collection.mutable.Set.empty[Int]
+    activeBlock.transformedCells.foreach { cell =>
+      affectedLines += cell.y
+      grid(cell.x)(cell.y) = true
+    }
+    clearFilledLines(affectedLines)
+  }
+  
+  def clearFilledLines(affectedLines: Iterable[Int]) = {
+     
+  }
+  // Converts a move to a detailed string, for debugging mostly
+  private def moveToString(move: Moves.Move): String = {
+    "Move #" + pastBlockStates.size + " of unit #" + numBlocksPlayed + "(" + move + ")"
+  }
+
+  // Checks whether any part of the block is outside the grid
+  private def exitsGrid(block: Block): Boolean = {
+    return block.transformedCells.exists { cell =>
+      cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height
+    }
+  } 
+
+  // Checks whether any part of the block collides with a full cell
+  private def collidesWithFullCell(block: Block): Boolean = {
+    return block.transformedCells.exists { cell => grid(cell.x)(cell.y) }
+  } 
 
   // Width and height of the board
   var height = -1
@@ -105,7 +134,7 @@ class Board {
   var sourceSeeds = Array.emptyIntArray
   
   // How many units have already completed their move
-  var numUnitsPlayed = 0
+  var numBlocksPlayed = -1
   
   // The index of the current unit into the blocks
   var blockIndex = -1

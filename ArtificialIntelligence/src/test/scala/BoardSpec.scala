@@ -35,7 +35,7 @@ class BoardSpec extends UnitSpec {
     board.grid(3)(9) should be (true)
     
     board.sourceSeedIndex should be (0)
-    board.numUnitsPlayed should be (0)
+    board.numBlocksPlayed should be (0)
     board.blockIndex should be (0)
   }
 
@@ -93,9 +93,17 @@ class BoardSpec extends UnitSpec {
     val board = new Board()
     board.fromJson(BOARD_JSON)
 
-    board.doMove(Moves.E)
-    a [board.InvalidMoveException] should be thrownBy {
-      board.doMove(Moves.E)
-    }
+    board.doMove(Moves.SW)
+    board.numBlocksPlayed should be (0)
+    board.grid(0)(1) should be (false)
+    board.grid(1)(1) should be (false)
+    board.grid(2)(1) should be (false)
+
+    // Lock the block by moving it out of the grid
+    board.doMove(Moves.W)
+    board.numBlocksPlayed should be (1)
+    board.grid(0)(1) should be (true)
+    board.grid(1)(1) should be (false)
+    board.grid(2)(1) should be (true)
   }
 }
