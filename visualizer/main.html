@@ -6,9 +6,12 @@
     <script src="board.js"> </script>
   </head>
   <body onload="draw();">
-      <button onkeypress="aKeyPressed(event);" onClick="drawNextConfig();" tabindex=1> next </button>
-      <button onkeypress="aKeyPressed(event);" onClick="drawPrevConfig();" tabindex=2> prev </button>
-    <div>
+    <div align="center">
+      <button style="display:inline" onkeypress="aKeyPressed(event);" onClick="drawNextConfig();" tabindex=1> next </button>
+      <div id="step-no" style="display:inline"> </div>
+      <button style="display:inline" onkeypress="aKeyPressed(event);" onClick="drawPrevConfig();" tabindex=2> prev </button>
+    </div>
+    <div align="center">
       <canvas onkeypress="aKeyPressed(event);" id="hex-board" width="800" height="800"> </canvas>
     </div>
   </body>

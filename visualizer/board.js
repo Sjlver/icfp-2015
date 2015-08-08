@@ -113,12 +113,14 @@ var currentConfigIndex = 0;
 
 function draw() {
     drawConfig(configurations[currentConfigIndex]);
+    document.getElementById('step-no').innerHTML = currentConfigIndex;
 }
 
 function drawNextConfig() {
     if (currentConfigIndex < configurations.length - 1) {
         ++currentConfigIndex;
         drawConfig(configurations[currentConfigIndex]);
+        document.getElementById('step-no').innerHTML = currentConfigIndex;
     }
 }
 
@@ -126,6 +128,7 @@ function drawPrevConfig() {
     if (currentConfigIndex > 0) {
         --currentConfigIndex;
         drawConfig(configurations[currentConfigIndex]);
+        document.getElementById('step-no').innerHTML = currentConfigIndex;
     }
 }
 
