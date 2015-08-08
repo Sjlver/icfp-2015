@@ -4,7 +4,7 @@ class BoardSpec extends UnitSpec {
 
   "A Board" should "load itself from JSON" in {
     val board = new Board()
-    board.loadFromJson("""
+    board.fromJson("""
       {
         "height":10,
         "width":5,
@@ -47,6 +47,15 @@ class BoardSpec extends UnitSpec {
     board.grid(3)(8) should be (false)
     board.grid(0)(8) should be (true)
     board.grid(3)(9) should be (true)
-    
   }
+  
+  "A Board" should "write itself to JSON" in {
+    val board = new Board
+    board.width = 2
+    board.height = 2
+    board.grid = Array(Array(false, true), Array(false, false))
+    
+    board.toJson should be ("""{"width":2,"height":2,"filled":[{"x":0,"y":1}]}""")
+  }
+    
 }
