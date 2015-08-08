@@ -100,26 +100,55 @@ class Board {
     clearFilledLines(affectedLines)
   }
   
-  def clearFilledLines(affectedLines: Iterable[Int]) = {
-     
+  def clearFilledLines(affectedLines: Iterable[Int]) {
+    // Find lines that are really full.
+    val linesToClear = affectedLines.filter( y => 0.to(width - 1).forall(x => grid(x)(y)) ).toSet
+    if (linesToClear.isEmpty) return
+    
+    // Clear these lines.
+    val lowestLineToClear = linesToClear.max
+    var numLinesCleared = 0
+    lowestLineToClear.to(0).by(-1).foreach { y =>
+      if (linesToClear.contains(y)) {
+        numLinesCleared += 1
+      }
+      val sourceY = y - numLinesCleared
+      if (sourceY >= 0) {
+        // Copy from sourceY
+        0.to(width - 1).foreach { x => grid(x)(y) = grid(x)(sourceY) }
+      } else {
+        // Lines at the top become completely empty
+        0.to(width - 1).foreach { x => grid(x)(y) = false }
+      }
+    }
   }
-  // Converts a move to a detailed string, for debugging mostly
+  
+  // Converts a move to a detailed string, for debugging mostly.
   private def moveToString(move: Moves.Move): String = {
-    "Move #" + pastBlockStates.size + " of unit #" + numBlocksPlayed + "(" + move + ")"
+    "Move #" + pastBlockStates.size + " of unit #" + numBlocksPlayed + ": " + move
   }
 
-  // Checks whether any part of the block is outside the grid
+  // Checks whether any part of the block is outside the grid.
   private def exitsGrid(block: Block): Boolean = {
     return block.transformedCells.exists { cell =>
       cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height
     }
   } 
 
-  // Checks whether any part of the block collides with a full cell
+  // Checks whether any part of the block collides with a full cell.
   private def collidesWithFullCell(block: Block): Boolean = {
     return block.transformedCells.exists { cell => grid(cell.x)(cell.y) }
   } 
 
+  // Converts a grid to string, for debugging.
+  private def gridToString(): String = {
+    val lines = 0.to(height - 1).map { y =>
+      val start = if (y % 2 == 0) "" else " "
+      0.to(width - 1).map { x => if (grid(x)(y)) "o" else "." }.mkString(start, " ", "\n")  
+    }
+    lines.mkString
+  }
+  
   // Width and height of the board
   var height = -1
   var width = -1

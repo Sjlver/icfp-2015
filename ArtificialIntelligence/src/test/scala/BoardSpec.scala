@@ -106,4 +106,41 @@ class BoardSpec extends UnitSpec {
     board.grid(1)(1) should be (false)
     board.grid(2)(1) should be (true)
   }
+  
+  "A Board" should "clear full rows" in {
+    val board = new Board()
+    board.fromJson(BOARD_JSON)
+
+    // First block, fill (4, 3) and (3, 1)
+    board.doMove(Moves.SE)
+    board.doMove(Moves.CW)
+    board.doMove(Moves.SE)
+    board.doMove(Moves.E)
+    board.doMove(Moves.E)
+    
+    // Second block, fill (0, 3) and (2, 3)
+    board.doMove(Moves.SW)
+    board.doMove(Moves.SW)
+    board.doMove(Moves.SE)
+    board.doMove(Moves.W)
+
+    // Third block, fill (1, 3) and (3, 3). Don't lock just yet.
+    board.doMove(Moves.SW)
+    board.doMove(Moves.SE)
+    board.doMove(Moves.SE)
+    
+    board.grid(0)(3) should be (true)
+    board.grid(1)(3) should be (false)
+    board.grid(2)(3) should be (true)
+    board.grid(3)(3) should be (false)
+    board.grid(4)(3) should be (true)
+    
+    // Lock and clear!
+    board.doMove(Moves.E)
+    // Cell at (3, 1) should move down to (3, 2)
+    board.grid(3)(1) should be (false)
+    board.grid(3)(2) should be (true)
+    // Row 3 should now be clear
+    0.to(4).foreach { i => board.grid(i)(3) should be (false) }
+  }  
 }
