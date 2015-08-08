@@ -37,6 +37,7 @@ class BoardSpec extends UnitSpec {
     board.sourceSeedIndex should be (0)
     board.numBlocksPlayed should be (0)
     board.blockIndex should be (0)
+    board.sourceLength should be (100)
   }
 
   "A Board" should "write itself to JSON" in {
@@ -176,4 +177,31 @@ class BoardSpec extends UnitSpec {
     board.score should be (106)
   }  
 
+  "A Board" should "should end the game when the grid is full" in {
+    val board = new Board()
+    board.fromJson(BOARD_JSON)
+
+    // Lock the first block
+    board.doMove(Moves.W)
+    board.doMove(Moves.W)
+ 
+    // Lock the second block right in the spawning area
+    a [board.GameHasEndedException] should be thrownBy {
+      board.doMove(Moves.W)
+    }
+  }
+
+  "A Board" should "should end the game when all blocks have been played" in {
+    val board = new Board()
+    board.fromJson(BOARD_JSON)
+
+    // Override the source length for testing
+    board.sourceLength = 1
+    
+    // Lock the first block
+    board.doMove(Moves.W)
+    a [board.GameHasEndedException] should be thrownBy {
+      board.doMove(Moves.W)
+    }
+  }
 }

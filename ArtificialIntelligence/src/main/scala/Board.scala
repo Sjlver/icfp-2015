@@ -8,14 +8,18 @@ class Board {
   // Thrown when a move would be invalid (i.e., lead to a score of zero according to the specification)
   class InvalidMoveException(message: String) extends Exception
   
+  // Thrown when a move ends the game
+  class GameHasEndedException(message: String) extends Exception
+  
   def fromJson(jsonString: String) {
     // We ignore potential invalid JSON, hence the @unchecked.
 
     val jsonObject = jsonString.parseJson.asJsObject
-    jsonObject.getFields("width", "height") match {
-      case Seq(JsNumber(w), JsNumber(h)) =>
+    jsonObject.getFields("width", "height", "sourceLength") match {
+      case Seq(JsNumber(w), JsNumber(h), JsNumber(sl)) =>
         width = w.toInt
         height = h.toInt
+        sourceLength = sl.toInt
     }
     
     grid = Array.fill[Boolean](width, height)(false)
@@ -85,8 +89,17 @@ class Board {
 
   private def spawnNextBlock() {
     numBlocksPlayed += 1
+    if (numBlocksPlayed == sourceLength) {
+      throw new GameHasEndedException("Game ended (all blocks played).")
+    }
+
     blockIndex = random.next
-    activeBlock = Block.spawn(blocks(blockIndex % blocks.size), width)
+    val spawnedBlock = Block.spawn(blocks(blockIndex % blocks.size), width)
+    if (collidesWithFullCell(spawnedBlock)) {
+      throw new GameHasEndedException("Game ended (grid is full).")
+    }
+    
+    activeBlock = spawnedBlock
     pastBlockStates.clear()
     pastBlockStates += activeBlock
   }
@@ -175,6 +188,9 @@ class Board {
   
   // How many units have already completed their move
   var numBlocksPlayed = -1
+  
+  // The number of blocks in the source
+  var sourceLength = -1
   
   // The index of the current unit into the blocks
   var blockIndex = -1
