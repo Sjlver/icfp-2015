@@ -15,7 +15,7 @@ object Board {
     val width = (jsonObject.fields("width"): @unchecked) match { case JsNumber(w) => w.toInt }
     val height = (jsonObject.fields("height"): @unchecked) match { case JsNumber(h) => h.toInt }
     val sourceLength = (jsonObject.fields("sourceLength"): @unchecked) match { case JsNumber(sl) => sl.toInt }
-    
+
     val initialGrid = Array.fill[Boolean](width, height)(false)
     (jsonObject.fields("filled"): @unchecked) match {
       case JsArray(cells) => {
@@ -25,19 +25,19 @@ object Board {
         }
       }
     }
-    
+
     val sourceSeeds = (jsonObject.fields("sourceSeeds"): @unchecked) match {
       case JsArray(ss) => ss.map {
         jsValue => (jsValue: @unchecked) match {case JsNumber(s) => s.toInt}
       }.toArray
     }
-    
+
     val blocks = (jsonObject.fields("units"): @unchecked) match {
       case JsArray(units) => units.map { unit =>
         BlockTemplate.fromJsonObject(unit.asJsObject)
       }.toArray
     }
-    
+
     new Board(problemId, width, height, sourceLength, initialGrid, sourceSeeds, blocks)
   }
 }
@@ -45,27 +45,27 @@ object Board {
 class Board(
       // The problem id from the input file
       _problemId: Int,
-      
+
       // Width and height of the board
-      width: Int,
-      height: Int,
-    
+      _width: Int,
+      _height: Int,
+
       // The number of blocks in the source
       sourceLength: Int,
-      
+
       // The grid at the start of a game
       initialGrid: Array[Array[Boolean]],
-      
+
       // The list of source seeds
       sourceSeeds: Array[Int],
-      
+
       // The list of blocks
       blocks: Array[BlockTemplate]
     ) {
 
   // Thrown when a move would be invalid (i.e., lead to a score of zero according to the specification)
   class InvalidMoveException(message: String) extends Exception
-    
+
   def toJsonObject: JsObject = {
     val filledCells = ArrayBuffer.empty[(Int, Int)]
     0.to(width - 1).foreach { x =>
@@ -110,7 +110,7 @@ class Board(
     numBlocksPlayed = -1
     blockIndex = -1
     isActive = true
-    
+
     spawnNextBlock()
   }
 
@@ -119,14 +119,14 @@ class Board(
     if (!isActive) {
       throw new AssertionError("doMove must not be called on an inactive game.")
     }
-    
+
     val targetBlock = activeBlock.moved(move)
 
     // Check for moves that would lead to a repeated situation
     if (pastBlockStates.contains(targetBlock)) {
       throw new InvalidMoveException(moveToString(move) + " leads to repeated position")
     }
-    
+
     // Check for moves the exit the grid
     if (exitsGrid(targetBlock) || collidesWithFullCell(targetBlock)) {
       lockBlock()
@@ -138,14 +138,14 @@ class Board(
     pastBlockStates += activeBlock
     true
   }
-  
+
   override def toString(): String = {
     "Board(sourceSeedIndex=" + sourceSeedIndex +
       ", numBlocksPlayed=" + numBlocksPlayed +
       ", score=" + score +
       ", lsOld=" + lsOld +
       ", isActive=" + isActive + ")\n" +
-      gridToString() 
+      gridToString()
   }
 
   // Creates a deep copy of this game board.
@@ -167,10 +167,54 @@ class Board(
 
     result
   }
-  
+
+  // Boards are equal when they are roughly in the same state.
+  // We only care about the grid and the position of the current block here.
+  // We ignore things like the random seed, the pastBlockStates, ...
+  override def equals(other: Any): Boolean = {
+    if (other == null || !other.isInstanceOf[Board]) return false
+    val otherBoard = other.asInstanceOf[Board]
+
+    // Fast path check
+    if (hashCode() != otherBoard.hashCode()) return false
+
+    // Full comparison. Note that even here, we skip many fields
+    if (sourceSeedIndex != otherBoard.sourceSeedIndex) return false
+    if (numBlocksPlayed != otherBoard.numBlocksPlayed) return false
+    if (activeBlock != otherBoard.activeBlock) return false
+
+    if (width != otherBoard.width || height != otherBoard.height) return false
+    0.to(width - 1).foreach { x =>
+      0.to(height - 1).foreach { y =>
+        if (grid(x)(y) != otherBoard.grid(x)(y)) return false
+      }
+    }
+
+    true
+  }
+
+  // Override hashCode along with equals.
+  // TODO: keep track of this as we are doing moves, to improve performance
+  override def hashCode(): Int = {
+    var result = 41
+    result = 41 * (result + sourceSeedIndex)
+    result = 41 * (result + numBlocksPlayed)
+    result = 41 * (result + activeBlock.hashCode())
+    0.to(width - 1).foreach { x =>
+      0.to(height - 1).foreach { y =>
+        result = 41 * (result + (if (grid(x)(y)) 1 else 0))
+      }
+    }
+
+    result
+  }
+
   def problemId = _problemId
+  def width = _width
+  def height = _height
+
   def currentSourceSeed = sourceSeeds(sourceSeedIndex)
-  
+
   private def spawnNextBlock(): Boolean = {
     numBlocksPlayed += 1
     if (numBlocksPlayed == sourceLength) {
@@ -186,13 +230,13 @@ class Board(
       isActive = false
       return false
     }
-    
+
     activeBlock = spawnedBlock
     pastBlockStates.clear()
     pastBlockStates += activeBlock
     true
   }
-  
+
   private def lockBlock() {
     val affectedLines = scala.collection.mutable.Set.empty[Int]
     activeBlock.transformedCells.foreach { cell =>
@@ -202,13 +246,13 @@ class Board(
     val numLinesCleared = clearFilledLines(affectedLines)
     updateScore(numLinesCleared)
   }
-  
+
   // Clears all full lines. Returns the number of lines cleared
-  def clearFilledLines(affectedLines: Iterable[Int]): Int = {
+  private def clearFilledLines(affectedLines: Iterable[Int]): Int = {
     // Find lines that are really full.
     val linesToClear = affectedLines.filter( y => 0.to(width - 1).forall(x => grid(x)(y)) ).toSet
     if (linesToClear.isEmpty) return 0
-    
+
     // Clear these lines.
     val lowestLineToClear = linesToClear.max
     var numLinesCleared = 0
@@ -235,7 +279,7 @@ class Board(
     lsOld = ls
     score += points + lineBonus
   }
-  
+
   // Converts a move to a detailed string, for debugging mostly.
   private def moveToString(move: Moves.Move): String = {
     "Move #" + pastBlockStates.size + " of unit #" + numBlocksPlayed + ": " + move
@@ -246,12 +290,12 @@ class Board(
     return block.transformedCells.exists { cell =>
       cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height
     }
-  } 
+  }
 
   // Checks whether any part of the block collides with a full cell.
   private def collidesWithFullCell(block: Block): Boolean = {
     return block.transformedCells.exists { cell => grid(cell.x)(cell.y) }
-  } 
+  }
 
   // Converts a grid to string, for debugging.
   private def gridToString(): String = {
@@ -263,30 +307,30 @@ class Board(
         } else if (activeBlock.pivot.x == x && activeBlock.pivot.y == y) {
           "+"
         } else if (grid(x)(y)) {
-         "o" 
+         "o"
         } else {
           "."
         }
-      }.mkString(start, " ", "\n")  
+      }.mkString(start, " ", "\n")
     }
     lines.mkString
   }
-  
+
   // The grid ((0, 3) is column zero, row three).
   val grid = Array.ofDim[Boolean](width, height)
-  
+
   // The current game we're playing
   var sourceSeedIndex = -1
-  
+
   // How many units have already completed their move
   var numBlocksPlayed = -1
-  
+
   // The index of the current unit into the blocks
   var blockIndex = -1
 
   // This board's random number generator
   val random: DavarRandom = new DavarRandom(0)
-  
+
   // The block that is currently active. This is the block that is moved around.
   // It will become part of the grid once it is locked.
   var activeBlock: Block = null
@@ -297,10 +341,10 @@ class Board(
 
   // The score of the current game
   var score = 0
-  
+
   // The number of lines cleared with the previous block (ls_old from the spec)
   var lsOld = 0
-  
+
   // Whether a game is in progress or not
   var isActive = false
 }

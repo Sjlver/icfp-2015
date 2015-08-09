@@ -4,11 +4,14 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 object SamplingAI {
-  // The number of tree nodes to explore
-  val NUM_ALTERNATIVES = 50
+  // The number of tree nodes to explore per move
+  val NUM_ALTERNATIVES = 100
+
+  // The number of duplicates before giving up searching for new alternatives
+  val DUPLICATES_BEFORE_GIVING_UP = 100
 
   // The number of random playouts per alternative
-  val NUM_PLAYOUTS = 100
+  val NUM_PLAYOUTS = 500
 }
 
 class SamplingAI(board: Board) {
@@ -20,14 +23,21 @@ class SamplingAI(board: Board) {
     while (board.isActive) {
 
       // Generate some tree nodes to explore
-      // TODO: remove duplicates
       // TODO: currently, the alternatives are just the current board with
       //       one more block locked. There are certainly better options.
-      val alternatives = 0.to(SamplingAI.NUM_ALTERNATIVES - 1).map { i =>
+      val alternatives = scala.collection.mutable.HashSet.empty[TreeNode]
+      var numDuplicates = 0
+      while (alternatives.size < SamplingAI.NUM_ALTERNATIVES && numDuplicates < SamplingAI.DUPLICATES_BEFORE_GIVING_UP) {
         val node = new TreeNode(board.clone())
         node.playUntilLocked()
-        node
+        if (alternatives.contains(node)) {
+          numDuplicates += 1
+        } else {
+          alternatives += node
+          numDuplicates = 0
+        }
       }
+      System.err.println("Exploring " + alternatives.size + " alternatives...")
 
       // Score those alternatives using random playouts
       alternatives.foreach { node =>
@@ -37,7 +47,7 @@ class SamplingAI(board: Board) {
       }
 
       // Choose the best alternative
-      val sortedAlternatives = alternatives.sortBy { node => -node.avgScore }
+      val sortedAlternatives = alternatives.toArray.sortBy { node => -node.avgScore }
       val bestAlternative = sortedAlternatives(0)
       bestAlternative.movesToGetHere.foreach { move =>
         board.doMove(move)
@@ -90,6 +100,16 @@ class TreeNode(_board: Board) {
     }
     move
   }
+
+  // Tree nodes are equal if their boards are equal (we don't consider all other fields)
+  override def equals(other: Any): Boolean = {
+    if (other == null || !other.isInstanceOf[TreeNode]) return false
+
+    other.asInstanceOf[TreeNode].board.equals(board)
+  }
+
+  // Override hashCode along with equals
+  override def hashCode(): Int = board.hashCode()
 
   // Accessor for board
   def board = _board
