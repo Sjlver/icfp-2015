@@ -1,9 +1,6 @@
-import java.nio.file.{Paths, Files}
-import java.nio.charset.StandardCharsets
-
 import java.io.File
 
-object SolveIt {
+object Main {
 
   var inputFname = ""
   var time = -1
@@ -12,6 +9,7 @@ object SolveIt {
   var phrases :Seq[String] = Seq()
   var outputFname = ""
   var nMoves = -1
+  var tag = "int4_t"
   
   def parseArgs(list: List[String]): Boolean = {
       list match {
@@ -45,6 +43,9 @@ object SolveIt {
         case "-p" :: phrase :: tail =>
           phrases = phrases :+ phrase
           parseArgs(tail)
+        case "-tag" :: t :: tail =>
+          tag = t
+          parseArgs(tail)
         case _ =>
           println("Invalid option: " + list.toString)
           return false
@@ -53,7 +54,6 @@ object SolveIt {
   } 
   
   def main(args: Array[String]): Unit = {
-    
     if (args.length == 0) {
      println("please supply some options")
      return
@@ -67,16 +67,15 @@ object SolveIt {
         return
       }
       val board = new Board()
-      board.fromJson(scala.io.Source.fromFile(inputFname).getLines.reduceLeft(_+_))
+      board.fromJson(scala.io.Source.fromFile(inputFname).getLines.mkString)
       val aiRunner = new AIRunner(
         board,
         b => new SamplingAI(b),
         c => new PowerPhraseEncoder(c),
-        "AIRunnerSpec")
+        tag)
 
       val result = aiRunner.run().prettyPrint
       println(result)
     }
-  }/*   Files.write(Paths.get(args(2)), configs.getBytes(StandardCharsets.UTF_8));
-    */
+  }
 }
