@@ -105,6 +105,15 @@ class Board {
     pastBlockStates += activeBlock
     true
   }
+  
+  override def toString(): String = {
+    "Board(sourceSeedIndex=" + sourceSeedIndex +
+      ", numBlocksPlayed=" + numBlocksPlayed +
+      ", score=" + score +
+      ", lsOld=" + lsOld +
+      ", isActive=" + isActive + ")\n" +
+      gridToString() 
+  }
 
   private def spawnNextBlock(): Boolean = {
     numBlocksPlayed += 1
@@ -192,7 +201,17 @@ class Board {
   private def gridToString(): String = {
     val lines = 0.to(height - 1).map { y =>
       val start = if (y % 2 == 0) "" else " "
-      0.to(width - 1).map { x => if (grid(x)(y)) "o" else "." }.mkString(start, " ", "\n")  
+      0.to(width - 1).map { x =>
+        if (activeBlock.transformedCells.exists { cell => cell.x == x && cell.y == y }) {
+          "0"
+        } else if (activeBlock.pivot.x == x && activeBlock.pivot.y == y) {
+          "+"
+        } else if (grid(x)(y)) {
+         "o" 
+        } else {
+          "."
+        }
+      }.mkString(start, " ", "\n")  
     }
     lines.mkString
   }
