@@ -3,6 +3,8 @@
 import scala.collection.mutable.ArrayBuffer
 import spray.json._
 
+import java.io._
+
 class ProblemSixSampleSolutionSpec extends UnitSpec {
   val MOVES1 = """
 iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeee
@@ -29,8 +31,7 @@ emimimimimiiiiiiimiiiimimmemimimimmeemimimimeeemmimimmiiiii
 immiiiipmmiiimmmimimeemimimeeemmimmiiiippmiiiimiiippimiimim
 eemimimeeeemimimiiiipmeemimimiimiimimmimeeemimimmippipmmiim
 emimmipimeeeemimmeemimiippimeeeeemimimmmimmmeeeemimimiiipim
-miipmemimmeeeemimimiipipimmipppimeeemimmpppmmpmeeeeemimmemm
-"""
+miipmemimmeeeemimimiipipimmipppimeeemimmpppmmpmeeeeemimmemm"""
   
   val PROBLEM_6_JSON = """
     {"height":10,"width":10,
@@ -50,20 +51,18 @@ miipmemimmeeeemimimiipipimmipppimeeemimmpppmmpmeeeeemimmemm
   "A Board" should "correctly replay a first sample solution" in {
     val board = Board.fromJson(PROBLEM_6_JSON)
     board.startNewGame()
-    
     val resultSteps = ArrayBuffer.empty[JsObject]
+    resultSteps += board.toJsonObject;
     0.to(MOVES1.size - 2).foreach { i =>
       if (Moves.isValidMoveChar(MOVES1(i))) {
         val move = Moves.fromChar(MOVES1(i))
         board.doMove(move) should be (true)
-        resultSteps += board.toJsonObject
       }
     }
     board.doMove(Moves.fromChar(MOVES1(MOVES1.size - 1))) should be (false)
     resultSteps += board.toJsonObject
     board.score should be (61)
     
-    //println("var configurations = " + JsArray(resultSteps: _*).compactPrint)
   }
   
   "A Board" should "correctly replay a second sample solution" in {
@@ -71,6 +70,7 @@ miipmemimmeeeemimimiipipimmipppimeeemimmpppmmpmeeeeemimmemm
     board.startNewGame()
     
     val resultSteps = ArrayBuffer.empty[JsObject]
+    resultSteps += board.toJsonObject
     0.to(MOVES2.size - 2).foreach { i =>
       if (Moves.isValidMoveChar(MOVES2(i))) {
         val move = Moves.fromChar(MOVES2(i))
@@ -82,6 +82,9 @@ miipmemimmeeeemimimiipipimmipppimeeemimmpppmmpmeeeeemimmemm
     resultSteps += board.toJsonObject
     board.score should be (3261)
     
-    //println("var configurations = " + JsArray(resultSteps: _*).compactPrint)
+    /*val out = new File("pr6.json")
+    val writer = new BufferedWriter(new FileWriter(out))
+    writer.write("var configurations = " + JsArray(resultSteps: _*).compactPrint)
+    writer.close()*/
   }
 }
