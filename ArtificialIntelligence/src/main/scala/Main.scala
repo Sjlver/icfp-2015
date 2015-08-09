@@ -51,7 +51,6 @@ object Main {
           println("Invalid option: " + list.toString)
           return false
       }
-    
   } 
   
   def main(args: Array[String]): Unit = {
@@ -96,7 +95,7 @@ object Main {
       val result = aiRunner.run().prettyPrint
       println(result)
       
-      boardWriter foreach {writer => writer.close()}
+      boardWriter foreach {writer => writer.write("];"); writer.close()}
     }
   }
 }
