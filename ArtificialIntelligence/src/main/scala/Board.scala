@@ -12,8 +12,9 @@ class Board {
     // We ignore potential invalid JSON, hence the @unchecked.
 
     val jsonObject = jsonString.parseJson.asJsObject
-    jsonObject.getFields("width", "height", "sourceLength") match {
-      case Seq(JsNumber(w), JsNumber(h), JsNumber(sl)) =>
+    jsonObject.getFields("id", "width", "height", "sourceLength") match {
+      case Seq(JsNumber(id), JsNumber(w), JsNumber(h), JsNumber(sl)) =>
+        problemId = id.toInt
         width = w.toInt
         height = h.toInt
         sourceLength = sl.toInt
@@ -225,6 +226,9 @@ class Board {
   // Width and height of the board
   var height = -1
   var width = -1
+  
+  // The problem id from the input file
+  var problemId = -1
   
   // The grid ((0, 3) is column zero, row three).
   var grid = Array.ofDim[Boolean](0, 0)

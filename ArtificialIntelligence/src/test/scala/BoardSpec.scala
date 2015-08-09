@@ -1,14 +1,13 @@
 import scala.collection.mutable.Stack
 
-class BoardSpec extends UnitSpec {
-
+object BoardSpec {
   val BOARD_JSON = """
     {
       "height":10,
       "width":5,
       "sourceSeeds":[17],
       "units":[{"members":[{"x":0,"y":0},{"x":2,"y":0}],"pivot":{"x":1,"y":0}}],
-      "id":0,
+      "id":42,
       "filled":[
         {"x": 0, "y": 8},
         {"x": 1, "y": 8},
@@ -21,13 +20,17 @@ class BoardSpec extends UnitSpec {
       "sourceLength":100
     }
   """
-  
+}
+
+class BoardSpec extends UnitSpec {
+
   "A Board" should "load itself from JSON" in {
     val board = new Board()
-    board.fromJson(BOARD_JSON)
+    board.fromJson(BoardSpec.BOARD_JSON)
     
     board.height should be (10)
     board.width should be (5)
+    board.problemId should be (42)
     
     board.sourceLength should be (100)
     board.sourceSeedIndex should be (-1)
@@ -36,7 +39,7 @@ class BoardSpec extends UnitSpec {
 
   "A Board" should "write itself to JSON" in {
     val board = new Board
-    board.fromJson(BOARD_JSON)
+    board.fromJson(BoardSpec.BOARD_JSON)
     board.startNewGame()
     
     board.toJsonObject.compactPrint should be (
@@ -47,7 +50,7 @@ class BoardSpec extends UnitSpec {
     
   "A Board" should "should process moves" in {
     val board = new Board()
-    board.fromJson(BOARD_JSON)
+    board.fromJson(BoardSpec.BOARD_JSON)
     board.startNewGame()
     
     board.activeBlock.template.members should be (Array(HexCell.fromXY(-1, 0), HexCell.fromXY(1, 0)))
@@ -67,7 +70,7 @@ class BoardSpec extends UnitSpec {
   
   "A Board" should "detect translations that lead to repetition" in {
     val board = new Board()
-    board.fromJson(BOARD_JSON)
+    board.fromJson(BoardSpec.BOARD_JSON)
     board.startNewGame()
 
     board.doMove(Moves.E)    
@@ -78,7 +81,7 @@ class BoardSpec extends UnitSpec {
 
   "A Board" should "detect rotations that lead to repetition" in {
     val board = new Board()
-    board.fromJson(BOARD_JSON)
+    board.fromJson(BoardSpec.BOARD_JSON)
     board.startNewGame()
 
     board.doMove(Moves.SE)
@@ -91,7 +94,7 @@ class BoardSpec extends UnitSpec {
 
   "A Board" should "detect moves that exit the grid" in {
     val board = new Board()
-    board.fromJson(BOARD_JSON)
+    board.fromJson(BoardSpec.BOARD_JSON)
     board.startNewGame()
 
     board.doMove(Moves.SW)
@@ -110,7 +113,7 @@ class BoardSpec extends UnitSpec {
   
   "A Board" should "clear full rows" in {
     val board = new Board()
-    board.fromJson(BOARD_JSON)
+    board.fromJson(BoardSpec.BOARD_JSON)
     board.startNewGame()
 
     // First block, fill (4, 3) and (3, 1)
@@ -148,7 +151,7 @@ class BoardSpec extends UnitSpec {
 
   "A Board" should "keep track of score correctly" in {
     val board = new Board()
-    board.fromJson(BOARD_JSON)
+    board.fromJson(BoardSpec.BOARD_JSON)
     board.startNewGame()
 
     board.score should be (0)
@@ -181,7 +184,7 @@ class BoardSpec extends UnitSpec {
 
   "A Board" should "should end the game when the grid is full" in {
     val board = new Board()
-    board.fromJson(BOARD_JSON)
+    board.fromJson(BoardSpec.BOARD_JSON)
     board.startNewGame() should be (true)
     board.isActive should be (true)
 
@@ -197,7 +200,7 @@ class BoardSpec extends UnitSpec {
 
   "A Board" should "should end the game when all blocks have been played" in {
     val board = new Board()
-    board.fromJson(BOARD_JSON)
+    board.fromJson(BoardSpec.BOARD_JSON)
     board.startNewGame() should be (true)
 
     // Override the source length for testing
