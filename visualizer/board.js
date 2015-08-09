@@ -21,8 +21,8 @@ function Board(nrows, ncols, cellSize, filledCells, currentUnit) {
 
     this.table = new Array(this.nrows);
 
-    for (var i = 0; i < this.nrows; ++i) {
-        this.table[i] = new Array(this.ncols);
+    for (var i = 0; i < this.ncols; ++i) {
+        this.table[i] = new Array(this.nrows);
         for (var j = 0; j < this.ncols; ++j) {
             this.table[i][j] = 'empty';
         }
