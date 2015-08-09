@@ -102,7 +102,7 @@ function drawConfig(configuration) {
         var nrows = configuration.height, ncols = configuration.width;
         var ctx = canvas.getContext('2d');
         var cellSize = Math.min(canvas.width/(ncols+1), canvas.height/nrows);
-        var b = new Board(nrows, ncols, cellSize, configuration.filled, configuration.current);
+        var b = new Board(nrows, ncols, cellSize, configuration.filled, configuration.activeBlock);
         b.draw(ctx);
     } else {
         alert("Canvas not supported.");
