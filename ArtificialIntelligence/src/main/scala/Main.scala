@@ -1,4 +1,4 @@
-import java.io.File
+import java.io.{File, FileWriter, BufferedWriter}
 
 object Main {
 
@@ -67,14 +67,36 @@ object Main {
         return
       }
       val board = Board.fromJson(scala.io.Source.fromFile(inputFname).getLines.mkString)
+      val boardCopy = board.clone()
       val aiRunner = new AIRunner(
         board,
         b => new SamplingAI(b),
         c => new PowerPhraseEncoder(c),
         tag)
-
+      
       val result = aiRunner.run().prettyPrint
       println(result)
+      
+      if (outputFname != ""){
+        var movesExecuted = 0
+        val out = new File(outputFname)
+        val writer = new BufferedWriter(new FileWriter(out))
+        while (boardCopy.startNewGame()) {
+          val reproBoard = boardCopy.clone()
+          val ai = new SamplingAI(boardCopy)
+          val commands = ai.run()
+          writer.write("var configurations = [")
+          writer.write(reproBoard.toJsonObject.compactPrint)
+          writer.write(", ")
+          for (command <- commands){
+            reproBoard.doMove(command)
+            writer.write(reproBoard.toJsonObject.compactPrint)
+            writer.write(", ")
+          }
+          writer.write("];")
+          writer.close()
+        }
+      }
     }
   }
 }
