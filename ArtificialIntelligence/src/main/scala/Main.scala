@@ -1,4 +1,5 @@
 import java.io.{File, FileWriter, BufferedWriter}
+import scala.collection.mutable.ArrayBuffer
 
 object Main {
 
@@ -67,36 +68,35 @@ object Main {
         return
       }
       val board = Board.fromJson(scala.io.Source.fromFile(inputFname).getLines.mkString)
-      val boardCopy = board.clone()
+      var boardWriter :Option[java.io.Writer] = None
+      if (outputFname != "") {
+        val out = new File(outputFname)
+        boardWriter = Some(new BufferedWriter(new FileWriter(out)))
+      }
+      val boardStateDumper = boardWriter match {
+        case None => {(b: Board, c: ArrayBuffer[Moves.Move]) => }
+        case Some(writer) => (b:Board, commands: ArrayBuffer[Moves.Move]) => {
+          writer.write("var configurations = [")
+          writer.write(b.toJsonObject.compactPrint)
+          writer.write(", ")
+            for (command <- commands){
+              b.doMove(command)
+              writer.write(b.toJsonObject.compactPrint)
+              writer.write(", ")
+            }
+          }
+      }
       val aiRunner = new AIRunner(
         board,
         b => new SamplingAI(b),
         c => new PowerPhraseEncoder(c),
+        boardStateDumper,
         tag)
       
       val result = aiRunner.run().prettyPrint
       println(result)
       
-      if (outputFname != ""){
-        var movesExecuted = 0
-        val out = new File(outputFname)
-        val writer = new BufferedWriter(new FileWriter(out))
-        while (boardCopy.startNewGame()) {
-          val reproBoard = boardCopy.clone()
-          val ai = new SamplingAI(boardCopy)
-          val commands = ai.run()
-          writer.write("var configurations = [")
-          writer.write(reproBoard.toJsonObject.compactPrint)
-          writer.write(", ")
-          for (command <- commands){
-            reproBoard.doMove(command)
-            writer.write(reproBoard.toJsonObject.compactPrint)
-            writer.write(", ")
-          }
-          writer.write("];")
-          writer.close()
-        }
-      }
+      boardWriter foreach {writer => writer.close()}
     }
   }
 }

@@ -1,5 +1,6 @@
 import scala.util.Random
 import spray.json._
+import scala.collection.mutable.ArrayBuffer
 
 object AIRunnerSpec {
   val TWOSEEDS_JSON = """
@@ -24,6 +25,7 @@ class AIRunnerSpec extends UnitSpec {
         board,
         b => new SamplingAI(b),
         c => new PowerPhraseEncoder(c),
+        {(b: Board, c: ArrayBuffer[Moves.Move]) => },
         "AIRunnerSpec")
     
     val solutionsArray = aiRunner.run()
@@ -48,6 +50,7 @@ class AIRunnerSpec extends UnitSpec {
         board,
         b => new SamplingAI(b),
         c => new PowerPhraseEncoder(c),
+        {(b: Board, c: ArrayBuffer[Moves.Move]) => },
         "AIRunnerSpec")
     
     val solutionsArray = aiRunner.run()

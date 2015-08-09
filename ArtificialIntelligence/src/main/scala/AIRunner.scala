@@ -7,14 +7,17 @@ class AIRunner(
     board: Board,
     aiFactory: Board => SamplingAI,
     encoderFactory: Iterable[Moves.Move] => PowerPhraseEncoder,
+    intermediateStateTracer: (Board, ArrayBuffer[Moves.Move]) => Unit,
     tag: String) {
 
   def run(): JsArray = {
     val solutions = ArrayBuffer.empty[JsObject]
     while (board.startNewGame()) {
+      val reproBoard = board.clone()
       val seed = board.currentSourceSeed
       val ai = aiFactory(board)
       val commands = ai.run()
+      intermediateStateTracer(reproBoard, commands)
       val encoder = encoderFactory(commands)
       solutions += JsObject(
         "problemId" -> JsNumber(board.problemId),
