@@ -41,7 +41,7 @@ class Board {
     }
   }
   
-  def toJson: String = {
+  def toJsonObject: JsObject = {
     val filledCells = ArrayBuffer.empty[(Int, Int)]
     0.to(width - 1).foreach { x =>
       0.to(height - 1).foreach { y =>
@@ -57,8 +57,14 @@ class Board {
       "filled" -> JsArray(
     		filledCells.map { case (x, y) =>
     		  JsObject("x" -> JsNumber(x), "y" -> JsNumber(y))
-    		}: _*)
-    ).compactPrint
+    		}: _*),
+      "activeBlock" -> JsObject(
+        "members" -> JsArray(activeBlock.transformedCells.map {
+          cell => JsObject("x" -> JsNumber(cell.x), "y" -> JsNumber(cell.y))
+        }: _*),
+        "pivot" -> JsObject("x" -> JsNumber(activeBlock.pivot.x), "y" -> JsNumber(activeBlock.pivot.y))
+      )
+    )
   }
 
   // Initializes a new game. Returns true on success, false when all source seeds have been exhausted.

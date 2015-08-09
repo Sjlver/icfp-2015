@@ -36,11 +36,13 @@ class BoardSpec extends UnitSpec {
 
   "A Board" should "write itself to JSON" in {
     val board = new Board
-    board.width = 2
-    board.height = 2
-    board.grid = Array(Array(false, true), Array(false, false))
+    board.fromJson(BOARD_JSON)
+    board.startNewGame()
     
-    board.toJson should be ("""{"width":2,"height":2,"filled":[{"x":0,"y":1}]}""")
+    board.toJsonObject.compactPrint should be (
+        """{"width":5,"height":10,""" +
+        """"filled":[{"x":0,"y":8},{"x":0,"y":9},{"x":1,"y":8},{"x":1,"y":9},{"x":3,"y":9},{"x":4,"y":8},{"x":4,"y":9}],""" +
+        """"activeBlock":{"members":[{"x":1,"y":0},{"x":3,"y":0}],"pivot":{"x":2,"y":0}}}""")
   }
     
   "A Board" should "should process moves" in {

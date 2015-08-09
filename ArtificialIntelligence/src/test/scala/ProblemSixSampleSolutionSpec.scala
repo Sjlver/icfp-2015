@@ -1,5 +1,8 @@
 // Tests the sample solution for problem six, given on the official contest website.
 
+import scala.collection.mutable.ArrayBuffer
+import spray.json._
+
 class ProblemSixSampleSolutionSpec extends UnitSpec {
   val MOVES = """
 iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeee
@@ -26,15 +29,18 @@ piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm"""
     board.fromJson(PROBLEM_6_JSON)
     board.startNewGame()
     
+    val resultSteps = ArrayBuffer.empty[JsObject]
     0.to(MOVES.size - 2).foreach { i =>
       if (Moves.isValidMoveChar(MOVES(i))) {
         val move = Moves.fromChar(MOVES(i))
         board.doMove(move) should be (true)
-        //println(board.toString)
+        resultSteps += board.toJsonObject
       }
     }
     board.doMove(Moves.fromChar(MOVES(MOVES.size - 1))) should be (false)
-    //println(board.toString)
+    resultSteps += board.toJsonObject
     board.score should be (61)
+    
+    //println("var configurations = " + JsArray(resultSteps: _*).compactPrint)
   }
 }
