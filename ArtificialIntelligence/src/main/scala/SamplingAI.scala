@@ -4,13 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 object SamplingAI {
-  // The number of tree nodes to explore per move
-  val NUM_ALTERNATIVES = 200
-
-  // The number of duplicates before giving up searching for new alternatives
-  val DUPLICATES_BEFORE_GIVING_UP = 500
-
-  // The number of random playouts per alternative
+  // The number of random playouts per move
   val NUM_PLAYOUTS = 100
 }
 
@@ -22,59 +16,80 @@ class SamplingAI(board: Board) {
     var result = ArrayBuffer.empty[Moves.Move]
     while (board.isActive) {
 
-      // Generate some tree nodes to explore
-      // TODO: currently, the alternatives are just the current board with
-      //       one more block locked. There are certainly better options.
-      val alternatives = scala.collection.mutable.HashSet.empty[TreeNode]
-      var numDuplicates = 0
-      while (alternatives.size < SamplingAI.NUM_ALTERNATIVES && numDuplicates < SamplingAI.DUPLICATES_BEFORE_GIVING_UP) {
-        val node = new TreeNode(board.clone())
-        node.playUntilLocked()
-        if (alternatives.contains(node)) {
-          numDuplicates += 1
-        } else {
-          alternatives += node
-          numDuplicates = 0
-        }
-      }
-      System.err.println("Exploring " + alternatives.size + " alternatives...")
-
-      // Score those alternatives using random playouts
-      alternatives.foreach { node =>
-        0.to(SamplingAI.NUM_PLAYOUTS - 1).foreach { i =>
-          node.addPlayout()
-        }
+      // Generate a game tree
+      nodesInTree.clear()
+      val root = new TreeNode(board.clone(), null, this)
+      0.to(SamplingAI.NUM_PLAYOUTS - 1).foreach { i =>
+        val node = root.selectLeaf()
+        node.expand()
+        val child = node.selectLeaf()
+        child.addPlayout()
       }
 
-      // Choose the best alternative
-      val sortedAlternatives = alternatives.toArray.sortBy { node => -node.avgScore }
-      val bestAlternative = sortedAlternatives(0)
-      bestAlternative.movesToGetHere.foreach { move =>
-        board.doMove(move)
-        result += move
-      }
-      System.err.println("Chose move with avgScore " + bestAlternative.avgScore + ":\n" + board)
+      val bestMove = root.bestMove()
+      board.doMove(bestMove)
+      result += bestMove
+
+      System.err.println("Chose move with avgScore " + root.avgScore + ":\n" + board)
     }
     result
   }
+
+  // The set of nodes in the game tree of this AI
+  val nodesInTree = scala.collection.mutable.HashSet.empty[TreeNode]
+
+  // The root of the game tree, for the current move
+	var root: TreeNode = null
 }
 
 // A node in the search tree
-class TreeNode(_board: Board) {
+class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
 
-  // Moves this TreeNode until the piece locks.
-  def playUntilLocked() = {
-    if (!board.isActive) {
-      throw new AssertionError("playUntilLocked must be called on an active board")
+  // Selects a leaf in the tree rooted at this node
+  def selectLeaf(): TreeNode = {
+    if (isLeaf) return this
+
+    // TODO: select based on desirability
+    var childIndex = Random.nextInt(children.size)
+    children.foreach { case (move, child) =>
+      if (childIndex == 0) return child.selectLeaf()
+      childIndex -= 1
     }
-    val oldNumBlocksPlayed = board.numBlocksPlayed
-    while (board.numBlocksPlayed == oldNumBlocksPlayed) {
-      movesToGetHere += playRandomMove(board)
+
+    throw new AssertionError("Bad random sampling code?!")
+  }
+
+  // Expand this node by adding all the children
+  def expand() {
+    if (!isLeaf) {
+      throw new AssertionError("expand must be called on a leaf node.")
+    }
+    if (!board.isActive) {
+      // Cannot expand... but I guess just doing nothing is fine in this case.
+      return
+    }
+
+    Moves.ALL_MOVES.foreach { move =>
+      val childBoard = board.clone()
+      try {
+        childBoard.doMove(move)
+        val child = new TreeNode(childBoard, this, ai)
+        if (!ai.nodesInTree.contains(child)) {
+          ai.nodesInTree += child
+          children(move) = child
+        }
+      } catch {
+        case _: childBoard.InvalidMoveException => Unit
+      }
     }
   }
 
   // Performs a random playout, in order to evaluate the score.
   def addPlayout() {
+    if (!isLeaf) {
+      throw new AssertionError("addPlayout must be called on a leaf node.")
+    }
+
     val playoutBoard = board.clone()
     while (playoutBoard.isActive) {
       playRandomMove(playoutBoard)
@@ -82,6 +97,23 @@ class TreeNode(_board: Board) {
 
     numPlayouts += 1
     sumScores += playoutBoard.score
+  }
+
+  def bestMove(): Moves.Move = {
+    if (isLeaf) {
+      throw new AssertionError("bestMove must be called on a non-leaf node.")
+    }
+
+    var bestScore = Double.MinValue
+    var result: Moves.Move  = null
+    children.foreach { case (move, child) =>
+      if (child.avgScore > bestScore) {
+        bestScore = child.avgScore
+        result = move
+      }
+    }
+
+    result
   }
 
   // Plays a random move *on the given board*. Returns the move played.
@@ -114,10 +146,12 @@ class TreeNode(_board: Board) {
   // Accessor for board
   def board = _board
 
-  // The moves it took to get to this TreeNode
-  val movesToGetHere = ArrayBuffer.empty[Moves.Move]
+  // The children of this node
+  val children = scala.collection.mutable.Map.empty[Moves.Move, TreeNode]
 
-  // The number of playouts we've done from this node
+  def isLeaf: Boolean = children.isEmpty
+
+  // The number of playouts we've done from this node (or its children)
   var numPlayouts = 0
 
   // The sum of scores found in all playouts
