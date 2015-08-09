@@ -8,9 +8,6 @@ class Board {
   // Thrown when a move would be invalid (i.e., lead to a score of zero according to the specification)
   class InvalidMoveException(message: String) extends Exception
   
-  // Thrown when a move ends the game
-  class GameHasEndedException(message: String) extends Exception
-  
   def fromJson(jsonString: String) {
     // We ignore potential invalid JSON, hence the @unchecked.
 
@@ -22,12 +19,12 @@ class Board {
         sourceLength = sl.toInt
     }
     
-    grid = Array.fill[Boolean](width, height)(false)
+    initialGrid = Array.fill[Boolean](width, height)(false)
     jsonObject.getFields("filled") match {
       case Seq(JsArray(cells)) => {
         cells.foreach { cellObject =>
           val cell = HexCell.fromJsonObject(cellObject.asJsObject)
-          grid(cell.x)(cell.y) = true
+          initialGrid(cell.x)(cell.y) = true
         }
       }
     }
@@ -36,15 +33,12 @@ class Board {
       case Seq(JsArray(ss)) =>
         sourceSeeds = ss.map(jsValue => (jsValue: @unchecked) match {case JsNumber(s) => s.toInt}).toArray
     }
-    random = new DavarRandom(sourceSeeds(sourceSeedIndex))
     
     jsonObject.getFields("units") match {
       case Seq(JsArray(units)) => {
         blocks = units.map(unit => BlockTemplate.fromJsonObject(unit.asJsObject)).toArray
       }
     }
-
-    spawnNextBlock()
   }
   
   def toJson: String = {
@@ -66,8 +60,33 @@ class Board {
     		}: _*)
     ).compactPrint
   }
-  
-  def doMove(move: Moves.Move) {
+
+  // Initializes a new game. Returns true on success, false when all source seeds have been exhausted.
+  def startNewGame(): Boolean = {
+    if (isActive) {
+      throw new AssertionError("startNewGame must not be called on an active game.")
+    }
+
+    sourceSeedIndex += 1
+    if (sourceSeedIndex >= sourceSeeds.size) {
+      return false
+    }
+
+    grid = initialGrid.clone()
+    random = new DavarRandom(sourceSeeds(sourceSeedIndex))
+    numBlocksPlayed = -1
+    blockIndex = -1
+    isActive = true
+    
+    spawnNextBlock()
+  }
+
+  // Perform a move. Returns true if the game is active after the move, and false if the game has ended.
+  def doMove(move: Moves.Move): Boolean = {
+    if (!isActive) {
+      throw new AssertionError("doMove must not be called on an inactive game.")
+    }
+    
     val targetBlock = activeBlock.moved(move)
 
     // Check for moves that would lead to a repeated situation
@@ -78,30 +97,35 @@ class Board {
     // Check for moves the exit the grid
     if (exitsGrid(targetBlock) || collidesWithFullCell(targetBlock)) {
       lockBlock()
-      spawnNextBlock()
-      return
+      return spawnNextBlock()
     }
 
     // All checks passed, move the target
     activeBlock = targetBlock
     pastBlockStates += activeBlock
+    true
   }
 
-  private def spawnNextBlock() {
+  private def spawnNextBlock(): Boolean = {
     numBlocksPlayed += 1
     if (numBlocksPlayed == sourceLength) {
-      throw new GameHasEndedException("Game ended (all blocks played).")
+      // Game ended (all blocks played).
+      isActive = false
+      return false
     }
 
     blockIndex = random.next
     val spawnedBlock = Block.spawn(blocks(blockIndex % blocks.size), width)
     if (collidesWithFullCell(spawnedBlock)) {
-      throw new GameHasEndedException("Game ended (grid is full).")
+      // Game ended (grid is full).
+      isActive = false
+      return false
     }
     
     activeBlock = spawnedBlock
     pastBlockStates.clear()
     pastBlockStates += activeBlock
+    true
   }
   
   private def lockBlock() {
@@ -180,8 +204,11 @@ class Board {
   // The grid ((0, 3) is column zero, row three).
   var grid = Array.ofDim[Boolean](0, 0)
   
+  // The grid at the start of a game
+  var initialGrid = Array.ofDim[Boolean](0, 0)
+  
   // The current game we're playing
-  var sourceSeedIndex = 0
+  var sourceSeedIndex = -1
   
   // The list of source seeds
   var sourceSeeds = Array.emptyIntArray
@@ -214,4 +241,7 @@ class Board {
   
   // The number of lines cleared with the previous block (ls_old from the spec)
   var lsOld = 0
+  
+  // Whether a game is in progress or not
+  var isActive = false
 }

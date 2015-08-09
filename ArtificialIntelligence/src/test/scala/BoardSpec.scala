@@ -29,15 +29,9 @@ class BoardSpec extends UnitSpec {
     board.height should be (10)
     board.width should be (5)
     
-    board.grid(0)(0) should be (false)
-    board.grid(3)(8) should be (false)
-    board.grid(0)(8) should be (true)
-    board.grid(3)(9) should be (true)
-    
-    board.sourceSeedIndex should be (0)
-    board.numBlocksPlayed should be (0)
-    board.blockIndex should be (0)
     board.sourceLength should be (100)
+    board.sourceSeedIndex should be (-1)
+    board.isActive should be (false)
   }
 
   "A Board" should "write itself to JSON" in {
@@ -52,6 +46,7 @@ class BoardSpec extends UnitSpec {
   "A Board" should "should process moves" in {
     val board = new Board()
     board.fromJson(BOARD_JSON)
+    board.startNewGame()
     
     board.activeBlock.template.members should be (Array(HexCell.fromXY(-1, 0), HexCell.fromXY(1, 0)))
     board.activeBlock.pivot should be (HexCell.fromXY(2, 0))
@@ -71,6 +66,7 @@ class BoardSpec extends UnitSpec {
   "A Board" should "detect translations that lead to repetition" in {
     val board = new Board()
     board.fromJson(BOARD_JSON)
+    board.startNewGame()
 
     board.doMove(Moves.E)    
     a [board.InvalidMoveException] should be thrownBy {
@@ -81,6 +77,7 @@ class BoardSpec extends UnitSpec {
   "A Board" should "detect rotations that lead to repetition" in {
     val board = new Board()
     board.fromJson(BOARD_JSON)
+    board.startNewGame()
 
     board.doMove(Moves.SE)
     board.doMove(Moves.CW)
@@ -93,6 +90,7 @@ class BoardSpec extends UnitSpec {
   "A Board" should "detect moves that exit the grid" in {
     val board = new Board()
     board.fromJson(BOARD_JSON)
+    board.startNewGame()
 
     board.doMove(Moves.SW)
     board.numBlocksPlayed should be (0)
@@ -111,6 +109,7 @@ class BoardSpec extends UnitSpec {
   "A Board" should "clear full rows" in {
     val board = new Board()
     board.fromJson(BOARD_JSON)
+    board.startNewGame()
 
     // First block, fill (4, 3) and (3, 1)
     board.doMove(Moves.SE)
@@ -148,6 +147,7 @@ class BoardSpec extends UnitSpec {
   "A Board" should "keep track of score correctly" in {
     val board = new Board()
     board.fromJson(BOARD_JSON)
+    board.startNewGame()
 
     board.score should be (0)
     
@@ -180,28 +180,29 @@ class BoardSpec extends UnitSpec {
   "A Board" should "should end the game when the grid is full" in {
     val board = new Board()
     board.fromJson(BOARD_JSON)
+    board.startNewGame() should be (true)
+    board.isActive should be (true)
 
     // Lock the first block
-    board.doMove(Moves.W)
-    board.doMove(Moves.W)
+    board.doMove(Moves.W) should be (true)
+    board.doMove(Moves.W) should be (true)
+    board.isActive should be (true)
  
     // Lock the second block right in the spawning area
-    a [board.GameHasEndedException] should be thrownBy {
-      board.doMove(Moves.W)
-    }
+    board.doMove(Moves.W) should be (false)
+    board.isActive should be (false)
   }
 
   "A Board" should "should end the game when all blocks have been played" in {
     val board = new Board()
     board.fromJson(BOARD_JSON)
+    board.startNewGame() should be (true)
 
     // Override the source length for testing
     board.sourceLength = 1
     
     // Lock the first block
-    board.doMove(Moves.W)
-    a [board.GameHasEndedException] should be thrownBy {
-      board.doMove(Moves.W)
-    }
+    board.doMove(Moves.W) should be (true)
+    board.doMove(Moves.W) should be (false)
   }
 }
