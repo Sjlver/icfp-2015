@@ -4,25 +4,21 @@ import scala.collection.mutable.HashSet
 
 // Contains the game board, does moves, undoes moves, checks validity, computes
 // scores, ...
-class Board {
-  // Thrown when a move would be invalid (i.e., lead to a score of zero according to the specification)
-  class InvalidMoveException(message: String) extends Exception
-  
-  def fromJson(jsonString: String) {
-    // We ignore potential invalid JSON, hence the @unchecked.
 
+object Board {
+  // Create a board from a JSON string
+  def fromJson(jsonString: String): Board = {
+    // We ignore potential invalid JSON, hence the @unchecked.
     val jsonObject = jsonString.parseJson.asJsObject
-    jsonObject.getFields("id", "width", "height", "sourceLength") match {
-      case Seq(JsNumber(id), JsNumber(w), JsNumber(h), JsNumber(sl)) =>
-        problemId = id.toInt
-        width = w.toInt
-        height = h.toInt
-        sourceLength = sl.toInt
-    }
+
+    val problemId = (jsonObject.fields("id"): @unchecked) match { case JsNumber(id) => id.toInt }
+    val width = (jsonObject.fields("width"): @unchecked) match { case JsNumber(w) => w.toInt }
+    val height = (jsonObject.fields("height"): @unchecked) match { case JsNumber(h) => h.toInt }
+    val sourceLength = (jsonObject.fields("sourceLength"): @unchecked) match { case JsNumber(sl) => sl.toInt }
     
-    initialGrid = Array.fill[Boolean](width, height)(false)
-    jsonObject.getFields("filled") match {
-      case Seq(JsArray(cells)) => {
+    val initialGrid = Array.fill[Boolean](width, height)(false)
+    (jsonObject.fields("filled"): @unchecked) match {
+      case JsArray(cells) => {
         cells.foreach { cellObject =>
           val cell = HexCell.fromJsonObject(cellObject.asJsObject)
           initialGrid(cell.x)(cell.y) = true
@@ -30,18 +26,46 @@ class Board {
       }
     }
     
-    jsonObject.getFields("sourceSeeds") match {
-      case Seq(JsArray(ss)) =>
-        sourceSeeds = ss.map(jsValue => (jsValue: @unchecked) match {case JsNumber(s) => s.toInt}).toArray
+    val sourceSeeds = (jsonObject.fields("sourceSeeds"): @unchecked) match {
+      case JsArray(ss) => ss.map {
+        jsValue => (jsValue: @unchecked) match {case JsNumber(s) => s.toInt}
+      }.toArray
     }
     
-    jsonObject.getFields("units") match {
-      case Seq(JsArray(units)) => {
-        blocks = units.map(unit => BlockTemplate.fromJsonObject(unit.asJsObject)).toArray
-      }
+    val blocks = (jsonObject.fields("units"): @unchecked) match {
+      case JsArray(units) => units.map { unit =>
+        BlockTemplate.fromJsonObject(unit.asJsObject)
+      }.toArray
     }
+    
+    new Board(problemId, width, height, sourceLength, initialGrid, sourceSeeds, blocks)
   }
-  
+}
+
+class Board(
+      // The problem id from the input file
+      _problemId: Int,
+      
+      // Width and height of the board
+      width: Int,
+      height: Int,
+    
+      // The number of blocks in the source
+      sourceLength: Int,
+      
+      // The grid at the start of a game
+      initialGrid: Array[Array[Boolean]],
+      
+      // The list of source seeds
+      sourceSeeds: Array[Int],
+      
+      // The list of blocks
+      blocks: Array[BlockTemplate]
+    ) {
+
+  // Thrown when a move would be invalid (i.e., lead to a score of zero according to the specification)
+  class InvalidMoveException(message: String) extends Exception
+    
   def toJsonObject: JsObject = {
     val filledCells = ArrayBuffer.empty[(Int, Int)]
     0.to(width - 1).foreach { x =>
@@ -79,8 +103,10 @@ class Board {
       return false
     }
 
-    grid = initialGrid.clone()
-    random = new DavarRandom(sourceSeeds(sourceSeedIndex))
+    0.to(width - 1).foreach { x =>
+      Array.copy(initialGrid(x), 0, grid(x), 0, initialGrid(x).size)
+    }
+    random.seed = currentSourceSeed
     numBlocksPlayed = -1
     blockIndex = -1
     isActive = true
@@ -122,6 +148,29 @@ class Board {
       gridToString() 
   }
 
+  // Creates a deep copy of this game board.
+  override def clone(): Board = {
+    val result = new Board(problemId, width, height, sourceLength, initialGrid, sourceSeeds, blocks)
+
+    0.to(width - 1).foreach { x =>
+      Array.copy(grid(x), 0, result.grid(x), 0, grid(x).size)
+    }
+    result.sourceSeedIndex = sourceSeedIndex
+    result.numBlocksPlayed = numBlocksPlayed
+    result.blockIndex = blockIndex
+    result.random.seed = random.seed
+    result.activeBlock = activeBlock
+    result.pastBlockStates ++= pastBlockStates
+    result.score = score
+    result.lsOld = lsOld
+    result.isActive = isActive
+
+    result
+  }
+  
+  def problemId = _problemId
+  def currentSourceSeed = sourceSeeds(sourceSeedIndex)
+  
   private def spawnNextBlock(): Boolean = {
     numBlocksPlayed += 1
     if (numBlocksPlayed == sourceLength) {
@@ -223,39 +272,20 @@ class Board {
     lines.mkString
   }
   
-  // Width and height of the board
-  var height = -1
-  var width = -1
-  
-  // The problem id from the input file
-  var problemId = -1
-  
   // The grid ((0, 3) is column zero, row three).
-  var grid = Array.ofDim[Boolean](0, 0)
-  
-  // The grid at the start of a game
-  var initialGrid = Array.ofDim[Boolean](0, 0)
+  val grid = Array.ofDim[Boolean](width, height)
   
   // The current game we're playing
   var sourceSeedIndex = -1
   
-  // The list of source seeds
-  var sourceSeeds = Array.emptyIntArray
-  
   // How many units have already completed their move
   var numBlocksPlayed = -1
-  
-  // The number of blocks in the source
-  var sourceLength = -1
   
   // The index of the current unit into the blocks
   var blockIndex = -1
 
-  // The list of blocks
-  var blocks = Array.empty[BlockTemplate]
-
   // This board's random number generator
-  var random: DavarRandom = null
+  val random: DavarRandom = new DavarRandom(0)
   
   // The block that is currently active. This is the block that is moved around.
   // It will become part of the grid once it is locked.
@@ -263,7 +293,7 @@ class Board {
 
   // This buffer stores the list of past positions/rotations of the active block.
   // Used to detect invalid moves
-  var pastBlockStates = HashSet.empty[Block]
+  val pastBlockStates = HashSet.empty[Block]
 
   // The score of the current game
   var score = 0

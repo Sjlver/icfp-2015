@@ -11,3 +11,8 @@ ArtificialIntelligence:
   IDE update site > Scala IDE plugins > ScalaTest
 - Install sbt (`brew install sbt`, or similar)
 - Generate an eclipse project file with `sbt eclipse`
+
+Submitting solutions
+--------------------
+
+    for i in qualifying_problems/problem_*; do ./submitter/submitter.sh $i -tag someTag; done

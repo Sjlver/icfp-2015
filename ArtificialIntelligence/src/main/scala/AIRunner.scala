@@ -12,7 +12,7 @@ class AIRunner(
   def run(): JsArray = {
     val solutions = ArrayBuffer.empty[JsObject]
     while (board.startNewGame()) {
-      val seed = board.sourceSeeds(board.sourceSeedIndex)
+      val seed = board.currentSourceSeed
       val ai = aiFactory(board)
       val commands = ai.run()
       val encoder = encoderFactory(commands)

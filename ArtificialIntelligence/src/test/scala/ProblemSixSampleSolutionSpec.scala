@@ -25,8 +25,7 @@ piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm"""
      "id":6,"filled":[],"sourceLength":150}"""
   
   "A Board" should "correctly replay a sample solution" in {
-    val board = new Board
-    board.fromJson(PROBLEM_6_JSON)
+    val board = Board.fromJson(PROBLEM_6_JSON)
     board.startNewGame()
     
     val resultSteps = ArrayBuffer.empty[JsObject]
