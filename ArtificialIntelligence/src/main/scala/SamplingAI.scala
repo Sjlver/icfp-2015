@@ -5,7 +5,7 @@ import scala.util.Random
 
 object SamplingAI {
   // The number of random playouts per move
-  val NUM_PLAYOUTS = 100
+  val NUM_PLAYOUTS = 1000
 }
 
 class SamplingAI(board: Board) {
@@ -15,22 +15,31 @@ class SamplingAI(board: Board) {
 
     var result = ArrayBuffer.empty[Moves.Move]
     while (board.isActive) {
-
       // Generate a game tree
       nodesInTree.clear()
-      val root = new TreeNode(board.clone(), null, this)
-      0.to(SamplingAI.NUM_PLAYOUTS - 1).foreach { i =>
+      numPlayouts = 0
+      root = new TreeNode(board.clone(), null, this)
+      while (numPlayouts < SamplingAI.NUM_PLAYOUTS) {
         val node = root.selectLeaf()
         node.expand()
-        val child = node.selectLeaf()
-        child.addPlayout()
+        if (node.isLeaf) {
+          // Expansion failed... just add a playout from this node
+          node.addPlayout()
+        } else {
+          // Expansion was successful. Ensure that each child has at least one playout.
+          node.children.foreach { case (move, child) =>
+            child.addPlayout()
+          }
+        }
       }
 
       val bestMove = root.bestMove()
       board.doMove(bestMove)
       result += bestMove
 
-      System.err.println("Chose move with avgScore " + root.avgScore + ":\n" + board)
+      System.err.println("Chose move with avgScore " + root.avgScore)
+      System.err.println(board)
+      //System.err.println(root)
     }
     result
   }
@@ -40,6 +49,9 @@ class SamplingAI(board: Board) {
 
   // The root of the game tree, for the current move
 	var root: TreeNode = null
+
+  // The total number of playouts in the tree
+  var numPlayouts = 0
 }
 
 // A node in the search tree
@@ -49,14 +61,16 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
   def selectLeaf(): TreeNode = {
     if (isLeaf) return this
 
-    // TODO: select based on desirability
-    var childIndex = Random.nextInt(children.size)
+    var maxUpperConfidenceBound = Double.MinValue
+    var selectedChild: TreeNode = null
     children.foreach { case (move, child) =>
-      if (childIndex == 0) return child.selectLeaf()
-      childIndex -= 1
+      if (child.upperConfidenceBound > maxUpperConfidenceBound) {
+        maxUpperConfidenceBound = child.upperConfidenceBound
+        selectedChild = child
+      }
     }
 
-    throw new AssertionError("Bad random sampling code?!")
+    return selectedChild.selectLeaf()
   }
 
   // Expand this node by adding all the children
@@ -95,8 +109,15 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
       playRandomMove(playoutBoard)
     }
 
+    updatePlayoutScores(playoutBoard.score)
+    ai.numPlayouts += 1
+  }
+
+  private def updatePlayoutScores(score: Int) {
     numPlayouts += 1
-    sumScores += playoutBoard.score
+    sumScores += score
+
+    if (parent != null) parent.updatePlayoutScores(score)
   }
 
   def bestMove(): Moves.Move = {
@@ -104,16 +125,32 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
       throw new AssertionError("bestMove must be called on a non-leaf node.")
     }
 
-    var bestScore = Double.MinValue
+    // Wikipedia recommends to choose the move with the highest number of
+    // simulations, not the one with the best average score...
+    // If Wikipedia says it, it must be true :)
+    var maxNumPlayouts = Int.MinValue
     var result: Moves.Move  = null
     children.foreach { case (move, child) =>
-      if (child.avgScore > bestScore) {
-        bestScore = child.avgScore
+      if (child.numPlayouts > maxNumPlayouts) {
+        maxNumPlayouts = child.numPlayouts
         result = move
       }
     }
 
     result
+  }
+
+  // How much do we want to explore this node?
+  // The UCT value from Wikipedia's page on Monte Carlo Tree Sampling.
+  def upperConfidenceBound: Double = {
+    if (numPlayouts == 0) {
+      throw new AssertionError("upperConfidenceBound requires at least one playout.")
+    }
+
+    // Given that our scores are integers rather than win/loss, we normalize them by
+    val exploitation = avgScore / ai.root.avgScore
+    val exploration = 1.4 * Math.sqrt(Math.log(ai.numPlayouts) / numPlayouts)
+    exploitation + exploration
   }
 
   // Plays a random move *on the given board*. Returns the move played.
@@ -138,6 +175,18 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
     if (other == null || !other.isInstanceOf[TreeNode]) return false
 
     other.asInstanceOf[TreeNode].board.equals(board)
+  }
+
+  override def toString(): String = toStringWithPrefix("")
+
+  def toStringWithPrefix(prefix: String): String = {
+    val result = new scala.collection.mutable.StringBuilder()
+    result ++= "" + avgScore + " = " + sumScores + " / " + numPlayouts + ", UCB: " + upperConfidenceBound
+    children.foreach { case (move, child) =>
+      result ++= "\n" + prefix + "  " + move + " => " + child.toStringWithPrefix(prefix + "        ")
+    }
+
+    result.toString()
   }
 
   // Override hashCode along with equals
