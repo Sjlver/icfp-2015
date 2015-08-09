@@ -5,13 +5,13 @@ import scala.util.Random
 
 object SamplingAI {
   // The number of tree nodes to explore per move
-  val NUM_ALTERNATIVES = 100
+  val NUM_ALTERNATIVES = 200
 
   // The number of duplicates before giving up searching for new alternatives
-  val DUPLICATES_BEFORE_GIVING_UP = 100
+  val DUPLICATES_BEFORE_GIVING_UP = 500
 
   // The number of random playouts per alternative
-  val NUM_PLAYOUTS = 500
+  val NUM_PLAYOUTS = 100
 }
 
 class SamplingAI(board: Board) {

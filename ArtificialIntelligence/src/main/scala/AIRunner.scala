@@ -17,6 +17,8 @@ class AIRunner(
       val seed = board.currentSourceSeed
       val ai = aiFactory(board)
       val commands = ai.run()
+      System.err.println("Game finished with score: " + board.score)
+
       intermediateStateTracer(reproBoard, commands)
       val encoder = encoderFactory(commands)
       solutions += JsObject(
