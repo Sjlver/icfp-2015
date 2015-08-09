@@ -313,9 +313,9 @@ class Board(
         } else {
           "."
         }
-      }.mkString(start, " ", "\n")
+      }.mkString(start, " ", "")
     }
-    lines.mkString
+    lines.mkString("\n")
   }
 
   // The grid ((0, 3) is column zero, row three).

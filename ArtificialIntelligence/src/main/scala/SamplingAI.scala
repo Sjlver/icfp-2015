@@ -5,7 +5,7 @@ import scala.util.Random
 
 object SamplingAI {
   // The number of random playouts per move
-  val NUM_PLAYOUTS = 1000
+  val NUM_PLAYOUTS = 2000
 }
 
 class SamplingAI(board: Board) {
@@ -14,11 +14,9 @@ class SamplingAI(board: Board) {
     System.err.println("SamplingAI running on board:\n" + board)
 
     var result = ArrayBuffer.empty[Moves.Move]
-    while (board.isActive) {
-      // Generate a game tree
-      nodesInTree.clear()
-      numPlayouts = 0
-      root = new TreeNode(board.clone(), null, this)
+
+    while (root.board.isActive) {
+      // Explore the game tree
       while (numPlayouts < SamplingAI.NUM_PLAYOUTS) {
         val node = root.selectLeaf()
         node.expand()
@@ -33,12 +31,20 @@ class SamplingAI(board: Board) {
         }
       }
 
-      val bestMove = root.bestMove()
+      // Perform a move
+      val (bestMove, bestChild) = root.bestMove()
+      System.err.println("In board: " + root.board)
+      System.err.println("  Chose move " + bestMove + " with avgScore " + root.avgScore)
+
       board.doMove(bestMove)
       result += bestMove
 
-      System.err.println("Chose move with avgScore " + root.avgScore)
-      System.err.println(board)
+      // Update the tree. We try to re-use as much of it as possible
+      root = bestChild
+      numPlayouts = root.numPlayouts
+      nodesInTree.clear()
+      root.updateNodesInTreeAfterRootChange()
+
       //System.err.println(root)
     }
     result
@@ -48,7 +54,7 @@ class SamplingAI(board: Board) {
   val nodesInTree = scala.collection.mutable.HashSet.empty[TreeNode]
 
   // The root of the game tree, for the current move
-	var root: TreeNode = null
+	var root: TreeNode = new TreeNode(board, null, this)
 
   // The total number of playouts in the tree
   var numPlayouts = 0
@@ -113,6 +119,12 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
     ai.numPlayouts += 1
   }
 
+  // After the root has changed, the AI's nodesInTree field must be updated.
+  def updateNodesInTreeAfterRootChange() {
+    ai.nodesInTree += this
+    children.foreach { case (move, child) => child.updateNodesInTreeAfterRootChange() }
+  }
+
   private def updatePlayoutScores(score: Int) {
     numPlayouts += 1
     sumScores += score
@@ -120,7 +132,7 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
     if (parent != null) parent.updatePlayoutScores(score)
   }
 
-  def bestMove(): Moves.Move = {
+  def bestMove(): (Moves.Move, TreeNode) = {
     if (isLeaf) {
       throw new AssertionError("bestMove must be called on a non-leaf node.")
     }
@@ -137,7 +149,7 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
       }
     }
 
-    result
+    (result, children(result))
   }
 
   // How much do we want to explore this node?
