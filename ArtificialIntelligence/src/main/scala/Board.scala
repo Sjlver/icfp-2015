@@ -109,6 +109,8 @@ class Board(
     random.seed = currentSourceSeed
     numBlocksPlayed = -1
     blockIndex = -1
+    score = 0
+    lsOld = 0
     isActive = true
 
     spawnNextBlock()
