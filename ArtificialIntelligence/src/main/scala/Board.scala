@@ -148,8 +148,24 @@ class Board(
       gridToString() 
   }
 
+  // Creates a deep copy of this game board.
   override def clone(): Board = {
-    null
+    val result = new Board(problemId, width, height, sourceLength, initialGrid, sourceSeeds, blocks)
+
+    0.to(width - 1).foreach { x =>
+      Array.copy(grid(x), 0, result.grid(x), 0, grid(x).size)
+    }
+    result.sourceSeedIndex = sourceSeedIndex
+    result.numBlocksPlayed = numBlocksPlayed
+    result.blockIndex = blockIndex
+    result.random.seed = random.seed
+    result.activeBlock = activeBlock
+    result.pastBlockStates ++= pastBlockStates
+    result.score = score
+    result.lsOld = lsOld
+    result.isActive = isActive
+
+    result
   }
   
   def problemId = _problemId

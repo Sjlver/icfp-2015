@@ -207,4 +207,19 @@ class BoardSpec extends UnitSpec {
     board.doMove(Moves.W) should be (true)
     board.doMove(Moves.W) should be (false)
   }
+
+  "A Board" should "clone itself properly" in {
+    val board = Board.fromJson(BoardSpec.MINIMAL_BOARD_JSON)
+    board.startNewGame()
+    board.doMove(Moves.W)
+
+    val clone = board.clone()
+    board.toString() should be (clone.toString())
+    
+    board.doMove(Moves.W)
+    board.toString() should not be (clone.toString())
+    clone.doMove(Moves.W)
+    board.toString() should be (clone.toString())
+  }
+
 }
