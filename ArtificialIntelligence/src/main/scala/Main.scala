@@ -66,8 +66,7 @@ object Main {
         println("Must specify an input file!")
         return
       }
-      val board = new Board()
-      board.fromJson(scala.io.Source.fromFile(inputFname).getLines.mkString)
+      val board = Board.fromJson(scala.io.Source.fromFile(inputFname).getLines.mkString)
       val aiRunner = new AIRunner(
         board,
         b => new SamplingAI(b),

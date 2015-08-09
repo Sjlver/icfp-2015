@@ -18,8 +18,7 @@ object AIRunnerSpec {
 class AIRunnerSpec extends UnitSpec {
   "An AIRunner" should "run AIs" in {
     Random.setSeed(42)
-    val board = new Board
-    board.fromJson(BoardSpec.BOARD_JSON)
+    val board = Board.fromJson(BoardSpec.BOARD_JSON)
     
     val aiRunner = new AIRunner(
         board,
@@ -43,9 +42,7 @@ class AIRunnerSpec extends UnitSpec {
   
   "An AIRunner" should "process all seeds" in {
     Random.setSeed(42)
-    val board = new Board
-    board.fromJson(AIRunnerSpec.TWOSEEDS_JSON)
-    board.sourceSeeds should be (Array(17, 42))
+    val board = Board.fromJson(AIRunnerSpec.TWOSEEDS_JSON)
     
     val aiRunner = new AIRunner(
         board,
@@ -54,10 +51,12 @@ class AIRunnerSpec extends UnitSpec {
         "AIRunnerSpec")
     
     val solutionsArray = aiRunner.run()
-    println(solutionsArray.prettyPrint)
+    //println(solutionsArray.prettyPrint)
     solutionsArray match {
       case JsArray(solutions) =>
         solutions.size should be (2)
+        (solutions(0).asJsObject.fields("seed"): @unchecked) match { case JsNumber(s) => s.toInt should be (17) }
+        (solutions(1).asJsObject.fields("seed"): @unchecked) match { case JsNumber(s) => s.toInt should be (42) }
     }
   }
 }
