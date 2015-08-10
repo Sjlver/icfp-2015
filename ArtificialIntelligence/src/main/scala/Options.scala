@@ -1,13 +1,13 @@
 
+import scala.collection.mutable.ArrayBuffer
+
 object Options {
-  var inputFname = ""
+  var inputFiles = ArrayBuffer.empty[String]
   var timeLimitSeconds = 60
-  var memory = -1
-  var cores = -1
-  var phrases :Seq[String] = Seq()
-  var outputFname = ""
-  var nMoves = -1
-  var nRepetitions = 1
+  var memoryLimitMegabytes = -1
+  var numCores = -1
+  var phrasesOfPower = ArrayBuffer.empty[String]
+  var guiJsonOutputFile: String = null
   var tag = "int4_t"
   var verbose = false
 
@@ -17,45 +17,57 @@ object Options {
     System.exit(1)
   }
 
-  def parseArgs(list: List[String]) {
-      list match {
-        case Nil => Unit
+  def parseArgs(args: Array[String]) {
+    // We all love sbt. But it doesn't allow us to have spaces in arguments... whatever.
+    // So here's the deal: our run script generates args that end in a backslash if
+    // they contain a space. So, first of all, merge such args
+    val mergedArgs = ArrayBuffer.empty[String]
+    var startNewArg = true
+    args.foreach { arg =>
+      if (startNewArg) {
+        mergedArgs += arg
+      } else {
+        mergedArgs(mergedArgs.size - 1) += arg
+      }
+      if (mergedArgs(mergedArgs.size - 1).endsWith("\\")) {
+        mergedArgs(mergedArgs.size - 1) = mergedArgs(mergedArgs.size - 1).substring(0, mergedArgs.size - 1) + " "
+        startNewArg = false
+      }
+    }
+
+    var argsList = mergedArgs.toList
+    while (!argsList.isEmpty) {
+      argsList = argsList match {
         case "-f" :: fname :: tail =>
-          if (inputFname != "") usage("Hmm... got more than one input files. Whan should I do with it?")
-          inputFname = fname
-          parseArgs(tail)
+          inputFiles += fname
+          tail
         case "-v" :: tail =>
           verbose = true
-          parseArgs(tail)
+          tail
         case "-out" :: fname :: tail =>
-          outputFname = fname
-          parseArgs(tail)
-        case "-moves" :: n :: tail =>
-          nMoves = n.toInt
-          parseArgs(tail)
-        case "-repetitions" :: n :: tail =>
-          nRepetitions = n.toInt
-          parseArgs(tail)
+          guiJsonOutputFile = fname
+          tail
         case "-t" :: t :: tail =>
           timeLimitSeconds = t.toInt
-          parseArgs(tail)
+          tail
         case "-m" :: mem :: tail =>
-          if (memory != -1) usage("Hmm... got more than one memory bounds")
-          memory = mem.toInt
-          parseArgs(tail)
+          if (memoryLimitMegabytes != -1) usage("Hmm... got more than one memory bounds")
+          memoryLimitMegabytes = mem.toInt
+          tail
         case "-c" :: c :: tail =>
-          if (cores != -1) usage("Hmm... got more than one core numbers")
-          cores = c.toInt
-          parseArgs(tail)
+          if (numCores != -1) usage("Hmm... got more than one core numbers")
+          numCores = c.toInt
+          tail
         case "-p" :: phrase :: tail =>
-          phrases = phrases :+ phrase
-          parseArgs(tail)
+          phrasesOfPower += phrase
+          tail
         case "-tag" :: t :: tail =>
           tag = t
-          parseArgs(tail)
-        case _ =>
-          usage("Invalid option: " + list.toString)
+          tail
+        case other =>
+          return usage("Invalid option: " + other)
       }
+    }
   }
 
   def log(message: String) = {

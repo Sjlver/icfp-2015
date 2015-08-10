@@ -23,7 +23,7 @@ class AIRunner(
       val ai = aiFactory(board, currentEndMillis)
       val moves = ai.run()
 
-      System.err.println("Game finished with score: " + board.score)
+      Options.log("Game finished with score: " + board.score)
       sumScores += board.score
 
       gameToJsonPrinter.printMoves(reproBoard, moves)

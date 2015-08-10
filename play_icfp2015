@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+
+SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+cd "$SCRIPT_DIR/ArtificialIntelligence"
+
+# Escape params (doh, sbt!)
+declare -a params
+for i in $(seq 1 $#); do
+  params[$i]="$( echo "${!i}" | sed 's/ /\\ /' )"
+done
+
+exec sbt "run-main Main ${params[*]}"
