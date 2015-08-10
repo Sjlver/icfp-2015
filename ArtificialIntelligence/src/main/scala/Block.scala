@@ -18,8 +18,6 @@ object Block {
     val pivotY = -topMost
     val pivotX = -leftMost + spaceAvailable / 2
 
-    println("spawn: " + template + ", blockWidth=" + blockWidth + ", pivotY=" + pivotY + ", pivotX=" + pivotX)
-
     Block(template, HexCell.fromXY(pivotX, pivotY), 0)
   }
 }
