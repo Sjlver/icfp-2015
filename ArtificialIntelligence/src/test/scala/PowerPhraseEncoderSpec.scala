@@ -59,7 +59,6 @@ class PowerPhraseEncoderSpec extends UnitSpec{
     val shortPhrase = "mnm" //m, o, l all correspond to the same moves
     val moves = longPhrase.map(Moves.fromChar)
     val encoder1 = new PowerPhraseEncoder(moves, Array(shortPhrase, longPhrase))
-    println(encoder1.encode)
     encoder1.encode contains longPhrase should be (true)
     encoder1.encode map(Moves.fromChar) should be (moves)
     
@@ -73,6 +72,27 @@ class PowerPhraseEncoderSpec extends UnitSpec{
     val moves1 = phrase1.map(Moves.fromChar)
     val encoder1 = new PowerPhraseEncoder(moves1, Array(phrase1))
     encoder1.score should be (2*phrase1.length + 300)
+  }
+  
+  "A PowerPhraseEncoder" should "compute the score of mutually overlapping phrases" in {
+    val phrase1 = "mm"
+    val phrase2 = "mmo"
+    val phrase3 = "mmomm"
+    val moves = phrase3.map(Moves.fromChar)
+    val encoder = new PowerPhraseEncoder(moves, Array(phrase1, phrase2, phrase3))
+    encoder.score should be (2*(2*phrase1.length + phrase2.length + phrase3.length) + 3*300)
+  }
+  
+  "A PowerPhraseEncoder" should "compute the score of self overlapping phrase" in {
+    val phrase1 = "lll"
+    val moves1 = "lllll".map(Moves.fromChar)
+    val encoder1 = new PowerPhraseEncoder(moves1, Array(phrase1))
+    encoder1.score should be (2*(3*phrase1.length) + 300)
+    
+    val phrase2 = "mmm"
+    val moves2 = "mmmmm".map(Moves.fromChar)
+    val encoder2 = new PowerPhraseEncoder(moves2, Array(phrase2))
+    encoder2.score should be (2*(3*phrase2.length) + 300)
   }
   
   /*"A PowerPhraseEncoder" should "prefers a unique power phrase" in {
