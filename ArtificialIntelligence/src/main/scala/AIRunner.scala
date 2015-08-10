@@ -7,7 +7,7 @@ class AIRunner(
     board: Board,
     aiFactory: Board => SamplingAI,
     encoderFactory: Iterable[Moves.Move] => PowerPhraseEncoder,
-    intermediateStateTracer: (Board, ArrayBuffer[Moves.Move]) => Unit,
+    gameToJsonPrinter: GameToJsonPrinter,
     tag: String) {
 
   def run(): JsArray = {
@@ -16,11 +16,13 @@ class AIRunner(
       val reproBoard = board.clone()
       val seed = board.currentSourceSeed
       val ai = aiFactory(board)
-      val commands = ai.run()
-      System.err.println("Game finished with score: " + board.score)
+      val moves = ai.run()
 
-      intermediateStateTracer(reproBoard, commands)
-      val encoder = encoderFactory(commands)
+      System.err.println("Game finished with score: " + board.score)
+      sumScores += board.score
+
+      gameToJsonPrinter.printMoves(reproBoard, moves)
+      val encoder = encoderFactory(moves)
       solutions += JsObject(
         "problemId" -> JsNumber(board.problemId),
         "seed" -> JsNumber(seed),
@@ -30,4 +32,7 @@ class AIRunner(
     }
     JsArray(solutions: _*)
   }
+
+  // The sum of the scores of all games
+  var sumScores = 0
 }
