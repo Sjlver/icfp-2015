@@ -214,7 +214,7 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
   private def playRandomMove(board: Board): Moves.Move = {
     // Set weights to meaningful priors
     // ALL_MOVES =                  Moves.E, Moves.W, Moves.SE, Moves.SW, Moves.CW, Moves.CCW
-    val moveWeights = Array[Double](0.6,     0.6,     1.0,      1.0,      0.2,      0.2)
+    val moveWeights = Array[Double](1.0,     1.0,     1.0,      1.0,      0.2,      0.2)
 
     Moves.ALL_MOVES.zipWithIndex.foreach { case (move, i) =>
       if (board.isInvalidMove(move)) {
