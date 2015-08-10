@@ -267,14 +267,14 @@ class Board(
   // Clears all full lines. Returns the number of lines cleared
   private def clearFilledLines(affectedLines: Iterable[Int]): Int = {
     // Find lines that are really full.
-    val linesToClear = affectedLines.filter( y => 0.to(width - 1).forall(x => grid(x)(y)) ).toSet
+    val linesToClear = affectedLines.filter { y => 0.to(width - 1).forall( x => grid(x)(y) ) }.toSet
     if (linesToClear.isEmpty) return 0
 
     // Clear these lines.
     val lowestLineToClear = linesToClear.max
     var numLinesCleared = 0
     var y = lowestLineToClear
-    while (y > 0) {
+    while (y >= 0) {
       while (linesToClear.contains(y - numLinesCleared)) {
         numLinesCleared += 1
       }
@@ -292,8 +292,14 @@ class Board(
     }
 
     if (numLinesCleared != linesToClear.size) {
-      throw new AssertionError("Bug in clearFilledLines?!")
+      throw new AssertionError("Wrong number of lines cleared in clearFilledLines?!")
     }
+
+    // Expensive check... remove in production
+    //if (0.to(height - 1).exists { y => 0.to(width - 1).forall { x => grid(x)(y) } }) {
+    //  throw new AssertionError("Filled line exists after clearFilledLines?!")
+    //}
+
     return numLinesCleared
   }
 
