@@ -4,6 +4,14 @@ class PowerPhraseEncoder(moves: Iterable[Moves.Move], phrasesIterable: Iterable[
   val movePhrases = phrases map {phrase =>
     phrase map {c => Moves.fromChar(c)}}
   
+  val MoveChars = Map[Moves.Move, String](
+    Moves.W -> "p!.03\'P",
+    Moves.E -> "bcefy2BCEFY",
+    Moves.SW -> "aghij4AGHIJ",
+    Moves.SE -> "lmno 5LMNO",
+    Moves.CW -> "dqrvz1DQRVZ",
+    Moves.CCW -> "kstuwxKSTUWX")
+  
   def findPhraseStartingWith(move : Moves.Move): Int = {
     return movePhrases indexWhere (_(0) == move)
   }
@@ -16,19 +24,24 @@ class PowerPhraseEncoder(moves: Iterable[Moves.Move], phrasesIterable: Iterable[
       if (currentPhrase != -1) {
         val i = currentPhrase
         inPhrasePosition += 1
-        if (move == movePhrases(i)(inPhrasePosition)) {
+        if (inPhrasePosition < movePhrases(i).length &&
+            move == movePhrases(i)(inPhrasePosition)) {
           result += phrases(i)(inPhrasePosition)
         } else {
           inPhrasePosition = 0
           currentPhrase = findPhraseStartingWith(move)
           if (currentPhrase != -1)
             result += phrases(currentPhrase)(0)
+          else
+            result += MoveChars(move)(0)
         }
       } else {
         currentPhrase = findPhraseStartingWith(move)
         inPhrasePosition = 0
         if (currentPhrase != -1)
           result += phrases(currentPhrase)(0)
+        else
+          result += MoveChars(move)(0)
       }
     }
     result
