@@ -19,4 +19,4 @@ for i in $(seq 1 $#); do
   last_param="${!i}"
 done
 
-exec sbt "run-main Main ${params[*]}"
+exec sbt --error "run-main Main ${params[*]}"
