@@ -1,7 +1,7 @@
 
 
 class PowerPhraseEncoderSpec extends UnitSpec{
-  "A PowerPhraseEncoder" should "produce specific letters" in {
+  "A PowerPhraseEncoder" should "produces specific letters" in {
     val moves = Array(
       Moves.SW, Moves.W, Moves.CCW, Moves.SE, Moves.CW, Moves.SE, Moves.SE, Moves.SW, Moves.SW, Moves.W, 
       Moves.SE, Moves.SE, Moves.CCW, Moves.SE, Moves.W, Moves.CCW, Moves.CCW, Moves.W, Moves.SE, Moves.CW, 
@@ -29,7 +29,7 @@ class PowerPhraseEncoderSpec extends UnitSpec{
     threePhrasesEncoder.encode map {Moves.fromChar(_)} should be (moves)
   }
 
-  "A PowerPhraseEncoder" should "capture an exact power phrase" in {
+  "A PowerPhraseEncoder" should "captures an exact power phrase" in {
     val phrase = "Aleshka molodec!"
     val moves = phrase.map ({c => Moves.fromChar(c)})
     val encoder = new PowerPhraseEncoder(moves, Array(phrase))
@@ -37,7 +37,7 @@ class PowerPhraseEncoderSpec extends UnitSpec{
     encoder.encode map {c => Moves.fromChar(c)} should be (moves)
   }
   
-  "A PowerPhraseEncoder" should "capture an existing power phrase" in {
+  "A PowerPhraseEncoder" should "captures an existing power phrase" in {
     val phrase = "Nola"
     val moves = ("! !" + phrase + "lis").map {c => Moves.fromChar(c)}
     val encoder = new PowerPhraseEncoder(moves, Array(phrase))
@@ -45,7 +45,7 @@ class PowerPhraseEncoderSpec extends UnitSpec{
     encoder.encode map {c => Moves.fromChar(c)} should be (moves)
   }
   
-  "A PowerPhraseEncoder" should "capture an existing whole power phrase," +
+  "A PowerPhraseEncoder" should "captures an existing whole power phrase," +
                                  "when fractions present" in {
     val phrase = "Nola"
     val moves = ("No" + phrase + "lis").map {c => Moves.fromChar(c)}
@@ -54,7 +54,7 @@ class PowerPhraseEncoderSpec extends UnitSpec{
     encoder.encode map {c => Moves.fromChar(c)} should be (moves)
   }
   
-  "A PowerPhraseEncoder" should "prefer a longer power phrase over a shorter one" in {
+  "A PowerPhraseEncoder" should "prefers a longer power phrase over a shorter one" in {
     val longPhrase = "olololo"
     val shortPhrase = "mnm" //m, o, l all correspond to the same moves
     val moves = longPhrase.map(Moves.fromChar)
@@ -67,6 +67,18 @@ class PowerPhraseEncoderSpec extends UnitSpec{
     encoder2.encode contains longPhrase should be (true)
     encoder2.encode map(Moves.fromChar) should be (moves)
   }
+  
+  "A PowerPhraseEncoder" should "compute the score for non-overlapping phrases" in {
+    val phrase1 = "lam"
+    val moves1 = phrase1.map(Moves.fromChar)
+    val encoder1 = new PowerPhraseEncoder(moves1, Array(phrase1))
+    encoder1.score should be (2*phrase1.length + 300)
+  }
+  
+  /*"A PowerPhraseEncoder" should "prefers a unique power phrase" in {
+    
+  }*/
+  
   /*
   //TODO: actually mmmmmml is better than olololo in this case
   "A PowerPhraseEncoder" should "prefer a longer power phrase over a shorter one" in {

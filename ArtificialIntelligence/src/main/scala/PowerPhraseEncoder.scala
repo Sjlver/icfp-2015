@@ -22,8 +22,14 @@ class PowerPhraseEncoder(moves: Iterable[Moves.Move], phrasesIterable: Iterable[
   }
   
   def encode(): String = {
-    val phraseReplacements =movePhrasesStr.zip(phrases)
+    val phraseReplacements = movePhrasesStr.zip(phrases)
     phraseReplacements.foldLeft(movesStr)({(str:String, pair) => 
         val (expr,repl) = pair; expr.r replaceAllIn(str, repl) })
+  }
+  //TODO: count overlapping phrases
+  def score(): Int = {
+    val str = encode()
+    (phrases.map(phrase => phrase.r.findAllMatchIn(str).length * phrase.length) sum) * 2 +
+    (phrases.map(phrase => if (phrase.r.findAllMatchIn(str).length > 0) 1; else 0).sum) * 300
   }
 }
