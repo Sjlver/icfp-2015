@@ -61,7 +61,7 @@ class SamplingAI(board: Board, endMillis: Long) {
       // Perform a move
       val (bestMove, bestChild) = root.bestMove()
       Options.log("SamplingAI: performed " + numPlayouts + " playouts on board:")
-      Options.log(board.toString().replaceAll("^", "  "))
+      Options.log("  " + board.toString().replaceAll("\n", "\n  "))
       Options.log("  Chose move " + bestMove + " with avgScore " + root.avgScore)
 
       board.doMove(bestMove)

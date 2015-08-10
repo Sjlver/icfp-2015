@@ -10,17 +10,18 @@ WORKING_DIR="$( pwd )"
 API_TOKEN="s+yzAvnSP4yRZZYjzBnWDQ+Rgk1RNitp0fRqpBBgO18="
 TEAM_ID=242
 
-if [ $# -lt 1 ]; then
-  echo "usage: submitter.sh <problemfile> <other arguments>" >&2
+if [ $# -lt 2 ]; then
+  echo "usage: submitter.sh <problemfile> <tag> <other arguments>" >&2
   exit 1
 fi
 inputfile="$WORKING_DIR/$1"
-shift
+tag="$2"
+shift; shift
 
 run_ai() {
-  printf "Running AI ..." >&2
+  printf "Running AI: run-main Main $*" >&2
   result="$( cd ArtificialIntelligence && sbt --warn "run-main Main $*" )"
-  printf " done.\n" >&2
+  printf " ... done.\n" >&2
   echo "Result: $result" >&2
   echo >&2
   echo "$result"
@@ -36,5 +37,7 @@ submit() {
 
 cd "$SCRIPT_DIR/.."
 
-data="$( run_ai -f "$inputfile" "$@" )"
-submit "$data"
+(
+  data="$( run_ai -f "$inputfile" -tag "$tag" "$@" )"
+  submit "$data"
+) 2>&1 | tee "$SCRIPT_DIR/../logs/$tag.log"
