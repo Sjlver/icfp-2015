@@ -211,7 +211,10 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
 
   // Plays a random move *on the given board*. Returns the move played.
   private def playRandomMove(board: Board): Moves.Move = {
-    val moveWeights = Moves.ALL_MOVES.map { move => 1.0 }
+    // Set weights to meaningful priors
+    // ALL_MOVES =                  Moves.E, Moves.W, Moves.SE, Moves.SW, Moves.CW, Moves.CCW
+    val moveWeights = Array[Double](0.6,     0.6,     1.0,      1.0,      0.2,      0.2)
+
     Moves.ALL_MOVES.zipWithIndex.foreach { case (move, i) =>
       if (board.isInvalidMove(move)) {
         moveWeights(i) = 0.0
