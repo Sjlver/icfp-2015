@@ -273,10 +273,12 @@ class Board(
     // Clear these lines.
     val lowestLineToClear = linesToClear.max
     var numLinesCleared = 0
-    lowestLineToClear.to(0).by(-1).foreach { y =>
-      if (linesToClear.contains(y)) {
+    var y = lowestLineToClear
+    while (y > 0) {
+      while (linesToClear.contains(y - numLinesCleared)) {
         numLinesCleared += 1
       }
+
       val sourceY = y - numLinesCleared
       if (sourceY >= 0) {
         // Copy from sourceY
@@ -285,6 +287,12 @@ class Board(
         // Lines at the top become completely empty
         0.to(width - 1).foreach { x => grid(x)(y) = false }
       }
+
+      y -= 1
+    }
+
+    if (numLinesCleared != linesToClear.size) {
+      throw new AssertionError("Bug in clearFilledLines?!")
     }
     return numLinesCleared
   }
