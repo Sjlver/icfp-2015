@@ -4,45 +4,27 @@ class PowerPhraseEncoder(moves: Iterable[Moves.Move], phrasesIterable: Iterable[
   val movePhrases = phrases map {phrase =>
     phrase map {c => Moves.fromChar(c)}}
   
-  val MoveChars = Map[Moves.Move, String](
-    Moves.W -> "p!.03\'P",
-    Moves.E -> "bcefy2BCEFY",
-    Moves.SW -> "aghij4AGHIJ",
-    Moves.SE -> "lmno 5LMNO",
-    Moves.CW -> "dqrvz1DQRVZ",
-    Moves.CCW -> "kstuwxKSTUWX")
+  def MoveChars(move: Moves.Move) :String = move match {
+    case Moves.W => "p!.03\'P"
+    case Moves.E => "bcefy2BCEFY"
+    case Moves.SW => "aghij4AGHIJ"
+    case Moves.SE => "lmno 5LMNO"
+    case Moves.CW => "dqrvz1DQRVZ"
+    case Moves.CCW => "kstuwxKSTUWX"
+  }
+    
+  val movePhrasesStr = movePhrases map {ms => (ms map {move => MoveChars(move)(0)}).mkString}
+  val movesStr = (moves map {move => MoveChars(move)(0)}).mkString
   
   def findPhraseStartingWith(move : Moves.Move): Int = {
     return movePhrases indexWhere (_(0) == move)
   }
   
   def encode(): String = {
-    var result = ""
-    var currentPhrase :Int = -1
-    var inPhrasePosition = 0
-    for(move <- moves){
-      if (currentPhrase != -1) {
-        val i = currentPhrase
-        inPhrasePosition += 1
-        if (inPhrasePosition < movePhrases(i).length &&
-            move == movePhrases(i)(inPhrasePosition)) {
-          result += phrases(i)(inPhrasePosition)
-        } else {
-          inPhrasePosition = 0
-          currentPhrase = findPhraseStartingWith(move)
-          if (currentPhrase != -1)
-            result += phrases(currentPhrase)(0)
-          else
-            result += MoveChars(move)(0)
-        }
-      } else {
-        currentPhrase = findPhraseStartingWith(move)
-        inPhrasePosition = 0
-        if (currentPhrase != -1)
-          result += phrases(currentPhrase)(0)
-        else
-          result += MoveChars(move)(0)
-      }
+    var result = movesStr
+    for (i <- 0 until (movePhrasesStr.length)) {
+      val expr = movePhrasesStr(i).r
+      result = expr replaceAllIn(result, phrases(i))
     }
     result
   }

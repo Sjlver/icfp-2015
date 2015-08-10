@@ -18,6 +18,7 @@ class PowerPhraseEncoderSpec extends UnitSpec{
     for (c <- voidEncoder.encode) {
       Moves.isValidMoveChar(c) should be (true)
     }
+    voidEncoder.encode map {Moves.fromChar(_)} should be (moves)
     val threePhrasesEncoder = new PowerPhraseEncoder(moves,
                                                      Array("first phrase11", 
                                                            "Ei!", 
@@ -25,6 +26,7 @@ class PowerPhraseEncoderSpec extends UnitSpec{
     for (c <- threePhrasesEncoder.encode) {
       Moves.isValidMoveChar(c) should be (true)
     }
+    threePhrasesEncoder.encode map {Moves.fromChar(_)} should be (moves)
   }
 
   "A PowerPhraseEncoder" should "capture an exact power phrase" in {
@@ -39,8 +41,18 @@ class PowerPhraseEncoderSpec extends UnitSpec{
     val phrase = "Nola"
     val moves = ("! !" + phrase + "lis").map {c => Moves.fromChar(c)}
     val encoder = new PowerPhraseEncoder(moves, Array(phrase))
+    encoder.encode contains phrase should be (true)
+    encoder.encode map {c => Moves.fromChar(c)} should be (moves)
+  }
+  
+  "A PowerPhraseEncoder" should "capture an existing whole power phrase," +
+                                 "when fractions present" in {
+    val phrase = "Nola"
+    val moves = ("No" + phrase + "lis").map {c => Moves.fromChar(c)}
+    val encoder = new PowerPhraseEncoder(moves, Array(phrase))
     println(encoder.encode)
     encoder.encode contains phrase should be (true)
     encoder.encode map {c => Moves.fromChar(c)} should be (moves)
   }
+  
 }
