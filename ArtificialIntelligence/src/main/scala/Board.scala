@@ -265,9 +265,9 @@ class Board(
   }
 
   // Clears all full lines. Returns the number of lines cleared
-  private def clearFilledLines(affectedLines: Iterable[Int]): Int = {
+  private def clearFilledLines(affectedLines: scala.collection.mutable.Set[Int]): Int = {
     // Find lines that are really full.
-    val linesToClear = affectedLines.filter { y => 0.to(width - 1).forall( x => grid(x)(y) ) }.toSet
+    val linesToClear = affectedLines.filter { y => 0.to(width - 1).forall( x => grid(x)(y) ) }
     if (linesToClear.isEmpty) return 0
 
     // Clear these lines.

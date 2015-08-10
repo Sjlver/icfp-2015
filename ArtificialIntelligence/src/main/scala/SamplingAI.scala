@@ -37,8 +37,6 @@ object SamplingAI {
 class SamplingAI(board: Board, endMillis: Long) {
   // Runs the AI on a single game, and produces a sequence of moves.
   def run(): ArrayBuffer[Moves.Move] = {
-    Options.log("SamplingAI running on board:\n" + board)
-
     var result = ArrayBuffer.empty[Moves.Move]
 
     while (root.board.isActive) {

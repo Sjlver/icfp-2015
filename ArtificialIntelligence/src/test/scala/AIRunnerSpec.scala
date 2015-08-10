@@ -23,10 +23,11 @@ class AIRunnerSpec extends UnitSpec {
 
     val aiRunner = new AIRunner(
         board,
-        b => new SamplingAI(b),
+        (b, endMillis) => new SamplingAI(b, endMillis),
         c => new PowerPhraseEncoder(c, Array[String]()),
         new GameToJsonPrinter(null),
-        "AIRunnerSpec")
+        "AIRunnerSpec",
+        10)
 
     val solutionsArray = aiRunner.run()
 
@@ -48,10 +49,11 @@ class AIRunnerSpec extends UnitSpec {
 
     val aiRunner = new AIRunner(
         board,
-        b => new SamplingAI(b),
+        (b, endMillis) => new SamplingAI(b, endMillis),
         c => new PowerPhraseEncoder(c, Array[String]()),
         new GameToJsonPrinter(null),
-        "AIRunnerSpec")
+        "AIRunnerSpec",
+        10)
 
     val solutionsArray = aiRunner.run()
     //println(solutionsArray.prettyPrint)
