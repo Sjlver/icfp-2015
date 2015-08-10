@@ -24,7 +24,7 @@ class AIRunnerSpec extends UnitSpec {
     val aiRunner = new AIRunner(
         board,
         b => new SamplingAI(b),
-        c => new PowerPhraseEncoder(c),
+        c => new PowerPhraseEncoder(c, Array[String]()),
         {(b: Board, c: ArrayBuffer[Moves.Move]) => },
         "AIRunnerSpec")
     
@@ -49,7 +49,7 @@ class AIRunnerSpec extends UnitSpec {
     val aiRunner = new AIRunner(
         board,
         b => new SamplingAI(b),
-        c => new PowerPhraseEncoder(c),
+        c => new PowerPhraseEncoder(c, Array[String]()),
         {(b: Board, c: ArrayBuffer[Moves.Move]) => },
         "AIRunnerSpec")
     

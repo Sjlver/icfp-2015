@@ -88,7 +88,7 @@ object Main {
       val aiRunner = new AIRunner(
         board,
         b => new SamplingAI(b),
-        c => new PowerPhraseEncoder(c),
+        c => new PowerPhraseEncoder(c, Array[String]()),
         boardStateDumper,
         tag)
       
