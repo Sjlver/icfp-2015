@@ -51,7 +51,7 @@ class Board(
       _height: Int,
 
       // The number of blocks in the source
-      sourceLength: Int,
+      _sourceLength: Int,
 
       // The grid at the start of a game
       initialGrid: Array[Array[Boolean]],
@@ -222,8 +222,10 @@ class Board(
   def problemId = _problemId
   def width = _width
   def height = _height
+  def sourceLength = _sourceLength
 
   def currentSourceSeed = sourceSeeds(sourceSeedIndex)
+  def numGamesRemaining = sourceSeeds.size - sourceSeedIndex
 
   private def spawnNextBlock(): Boolean = {
     numBlocksPlayed += 1

@@ -5,13 +5,21 @@ import scala.util.Random
 
 object SamplingAI {
   // The number of random playouts per move.
-  val NUM_PLAYOUTS = 1000
+  val DEFAULT_NUM_PLAYOUTS_PER_MOVE = 100
+  val MAX_NUM_PLAYOUTS_PER_MOVE = 5000
+  val MIN_NUM_PLAYOUTS_PER_MOVE = 50
 
   // How much we favor exploration over exploitation.
   val EXPLORATION_FACTOR = 2.0
 
   // How much we prefer locking moves over other moves (<1 because we prefer others).
   val LOCKING_MOVE_FACTOR = 0.02
+
+  // How frequently we adjust the number of playouts (in milliseconds)
+  val ADJUSTMENT_INTERVAL = 10
+
+  // The maximum amount by which we adjust the number of playouts
+  val ADJUSTMENT_MAGNITUDE = 1.01
 
   // Returns an element sampled from `elems` according to the given weights.
   // Weights must be non-negative.
@@ -29,7 +37,7 @@ object SamplingAI {
   }
 }
 
-class SamplingAI(board: Board) {
+class SamplingAI(board: Board, endMillis: Long) {
   // Runs the AI on a single game, and produces a sequence of moves.
   def run(): ArrayBuffer[Moves.Move] = {
     System.err.println("SamplingAI running on board:\n" + board)
@@ -38,7 +46,8 @@ class SamplingAI(board: Board) {
 
     while (root.board.isActive) {
       // Explore the game tree
-      while (numPlayouts < SamplingAI.NUM_PLAYOUTS) {
+      val numPlayoutsAtExplorationStart = numPlayouts
+      while (numPlayouts - numPlayoutsAtExplorationStart < numPlayoutsPerMove) {
         val node = root.selectLeaf()
         node.expand()
         if (node.isLeaf) {
@@ -54,7 +63,8 @@ class SamplingAI(board: Board) {
 
       // Perform a move
       val (bestMove, bestChild) = root.bestMove()
-      System.err.println("In board: " + root.board)
+      System.err.println("SamplingAI: performed " + numPlayouts + " playouts on board:")
+      System.err.println(board.toString().replaceAll("^", "  "))
       System.err.println("  Chose move " + bestMove + " with avgScore " + root.avgScore)
 
       board.doMove(bestMove)
@@ -64,9 +74,37 @@ class SamplingAI(board: Board) {
       root = bestChild
       numPlayouts = root.numPlayouts
 
-      //System.err.println(root)
+      adjustNumPlayoutsPerMove()
     }
     result
+  }
+
+
+  // Adjusts the number of playouts, according to how well we're doing.
+  private def adjustNumPlayoutsPerMove() {
+    // Don't do this too frequently, otherwise time measurement is imprecise
+    val currentMillis = System.currentTimeMillis()
+    if (currentMillis - lastAdjustmentMillis < SamplingAI.ADJUSTMENT_INTERVAL) {
+      return
+    }
+
+    val fractionOfTimeElapsed =
+      (currentMillis - startMillis).toDouble / (endMillis - startMillis)
+    val fractionOfWorkDone =
+      Math.max(board.numBlocksPlayed.toDouble / board.sourceLength, 1.0 / board.sourceLength)
+
+    // If we did 20% of work in 30% of the available time, this will be 1.5
+    val estimatedFractionOfTimeNeeded = fractionOfTimeElapsed / fractionOfWorkDone
+
+    // Smooth the adjustment, otherwise we react too extremely
+    def limit(value: Double, min: Double, max: Double) =
+      Math.max(Math.min(value, max), min)
+
+    val adjustment = limit(estimatedFractionOfTimeNeeded,
+        1.0 / SamplingAI.ADJUSTMENT_MAGNITUDE, SamplingAI.ADJUSTMENT_MAGNITUDE)
+
+    numPlayoutsPerMove = limit(numPlayoutsPerMove / adjustment,
+        SamplingAI.MIN_NUM_PLAYOUTS_PER_MOVE, SamplingAI.MAX_NUM_PLAYOUTS_PER_MOVE)
   }
 
   // The root of the game tree, for the current move
@@ -74,6 +112,18 @@ class SamplingAI(board: Board) {
 
   // The total number of playouts in the tree
   var numPlayouts = 0
+
+  // The number of playouts per move (will be adjusted according to the time limit)
+  var numPlayoutsPerMove = SamplingAI.DEFAULT_NUM_PLAYOUTS_PER_MOVE.toDouble
+
+  // The time when we started this game
+  val startMillis = System.currentTimeMillis()
+  if (startMillis >= endMillis) {
+    throw new AssertionError("Time for game must be > 0.")
+  }
+
+  // The time when we last adjusted the number of playouts
+  var lastAdjustmentMillis = startMillis
 }
 
 // A node in the search tree

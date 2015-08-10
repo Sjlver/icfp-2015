@@ -13,10 +13,11 @@ object Main {
       val board = Board.fromJson(scala.io.Source.fromFile(Options.inputFname).getLines.mkString)
       val aiRunner = new AIRunner(
         board,
-        b => new SamplingAI(b),
+        (b, endMillis) => new SamplingAI(b, endMillis),
         c => new PowerPhraseEncoder(c, Options.phrases),
         new GameToJsonPrinter(Options.outputFname),
-        Options.tag)
+        Options.tag,
+        Options.timeLimitSeconds)
 
       val result = aiRunner.run().prettyPrint
       println(result)

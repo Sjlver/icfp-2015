@@ -5,17 +5,22 @@ import scala.collection.mutable.ArrayBuffer
 
 class AIRunner(
     board: Board,
-    aiFactory: Board => SamplingAI,
+    aiFactory: (Board, Long) => SamplingAI,
     encoderFactory: Iterable[Moves.Move] => PowerPhraseEncoder,
     gameToJsonPrinter: GameToJsonPrinter,
-    tag: String) {
+    tag: String,
+    timeLimitSeconds: Int) {
 
   def run(): JsArray = {
     val solutions = ArrayBuffer.empty[JsObject]
     while (board.startNewGame()) {
+      // Compute the time when this game must be done.
+      val currentMillis = System.currentTimeMillis()
+      val currentEndMillis = currentMillis + (endMillis - currentMillis) / board.numGamesRemaining
+
       val reproBoard = board.clone()
       val seed = board.currentSourceSeed
-      val ai = aiFactory(board)
+      val ai = aiFactory(board, currentEndMillis)
       val moves = ai.run()
 
       System.err.println("Game finished with score: " + board.score)
@@ -32,6 +37,9 @@ class AIRunner(
     }
     JsArray(solutions: _*)
   }
+
+  // The time when this AIRunner must be done (subtract 1% for safety)
+  val endMillis = System.currentTimeMillis() + 990 * timeLimitSeconds
 
   // The sum of the scores of all games
   var sumScores = 0
