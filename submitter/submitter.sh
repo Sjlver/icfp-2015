@@ -14,16 +14,16 @@ if [ $# -lt 2 ]; then
   echo "usage: submitter.sh <problemfile> <tag> <other arguments>" >&2
   exit 1
 fi
-inputfile="$WORKING_DIR/$1"
+inputfile="$1"
 tag="$2"
 shift; shift
 
 input_id="$( basename "$inputfile" .json )"
 
 run_ai() {
-  printf "Running AI: run-main Main $*" >&2
-  result="$( cd ArtificialIntelligence && sbt --warn "run-main Main $*" )"
-  printf " ... done.\n" >&2
+  echo "Running AI ..." >&2
+  result="$( ./play_icfp2015 "$@" )"
+  echo " ... done.\n" >&2
   echo "Result: $result" >&2
   echo >&2
   echo "$result"

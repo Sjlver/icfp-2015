@@ -29,8 +29,9 @@ object Options {
       } else {
         mergedArgs(mergedArgs.size - 1) += arg
       }
-      if (mergedArgs(mergedArgs.size - 1).endsWith("\\")) {
-        mergedArgs(mergedArgs.size - 1) = mergedArgs(mergedArgs.size - 1).substring(0, mergedArgs.size - 1) + " "
+      val lastArg = mergedArgs(mergedArgs.size - 1)
+      if (lastArg.endsWith("\\")) {
+        mergedArgs(mergedArgs.size - 1) = lastArg.substring(0, lastArg.size - 1) + " "
         startNewArg = false
       } else {
         startNewArg = true
