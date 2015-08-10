@@ -9,7 +9,8 @@ object Options {
   var nMoves = -1
   var nRepetitions = 1
   var tag = "int4_t"
-  
+  var verbose = false
+
   def usage(message: String) {
     System.err.println("usage: sbt 'run-main Main -f <input> <other options>'")
     System.err.println(message)
@@ -22,6 +23,9 @@ object Options {
         case "-f" :: fname :: tail =>
           if (inputFname != "") usage("Hmm... got more than one input files. Whan should I do with it?")
           inputFname = fname
+          parseArgs(tail)
+        case "-v" :: tail =>
+          verbose = true
           parseArgs(tail)
         case "-out" :: fname :: tail =>
           outputFname = fname
@@ -55,5 +59,7 @@ object Options {
       }
   }
 
-  
+  def log(message: String) = {
+    if (verbose) System.err.println(message)
+  }
 }

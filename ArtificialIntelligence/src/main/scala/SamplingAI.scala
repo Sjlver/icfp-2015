@@ -37,7 +37,7 @@ object SamplingAI {
 class SamplingAI(board: Board, endMillis: Long) {
   // Runs the AI on a single game, and produces a sequence of moves.
   def run(): ArrayBuffer[Moves.Move] = {
-    System.err.println("SamplingAI running on board:\n" + board)
+    Options.log("SamplingAI running on board:\n" + board)
 
     var result = ArrayBuffer.empty[Moves.Move]
 
@@ -60,9 +60,9 @@ class SamplingAI(board: Board, endMillis: Long) {
 
       // Perform a move
       val (bestMove, bestChild) = root.bestMove()
-      System.err.println("SamplingAI: performed " + numPlayouts + " playouts on board:")
-      System.err.println(board.toString().replaceAll("^", "  "))
-      System.err.println("  Chose move " + bestMove + " with avgScore " + root.avgScore)
+      Options.log("SamplingAI: performed " + numPlayouts + " playouts on board:")
+      Options.log(board.toString().replaceAll("^", "  "))
+      Options.log("  Chose move " + bestMove + " with avgScore " + root.avgScore)
 
       board.doMove(bestMove)
       result += bestMove
