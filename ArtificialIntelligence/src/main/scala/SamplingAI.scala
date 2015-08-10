@@ -7,16 +7,13 @@ object SamplingAI {
   // The number of random playouts per move.
   val DEFAULT_NUM_PLAYOUTS_PER_MOVE = 100
   val MAX_NUM_PLAYOUTS_PER_MOVE = 5000
-  val MIN_NUM_PLAYOUTS_PER_MOVE = 50
+  val MIN_NUM_PLAYOUTS_PER_MOVE = 10
 
   // How much we favor exploration over exploitation.
   val EXPLORATION_FACTOR = 2.0
 
   // How much we prefer locking moves over other moves (<1 because we prefer others).
   val LOCKING_MOVE_FACTOR = 0.02
-
-  // How frequently we adjust the number of playouts (in milliseconds)
-  val ADJUSTMENT_INTERVAL = 10
 
   // The maximum amount by which we adjust the number of playouts
   val ADJUSTMENT_MAGNITUDE = 1.01
@@ -82,11 +79,7 @@ class SamplingAI(board: Board, endMillis: Long) {
 
   // Adjusts the number of playouts, according to how well we're doing.
   private def adjustNumPlayoutsPerMove() {
-    // Don't do this too frequently, otherwise time measurement is imprecise
     val currentMillis = System.currentTimeMillis()
-    if (currentMillis - lastAdjustmentMillis < SamplingAI.ADJUSTMENT_INTERVAL) {
-      return
-    }
 
     val fractionOfTimeElapsed =
       (currentMillis - startMillis).toDouble / (endMillis - startMillis)
@@ -116,14 +109,9 @@ class SamplingAI(board: Board, endMillis: Long) {
   // The number of playouts per move (will be adjusted according to the time limit)
   var numPlayoutsPerMove = SamplingAI.DEFAULT_NUM_PLAYOUTS_PER_MOVE.toDouble
 
-  // The time when we started this game
-  val startMillis = System.currentTimeMillis()
-  if (startMillis >= endMillis) {
-    throw new AssertionError("Time for game must be > 0.")
-  }
-
-  // The time when we last adjusted the number of playouts
-  var lastAdjustmentMillis = startMillis
+  // The time when we started this game.
+  // Note that if the end time already passed, we adjust this to make the adjustment computation easier.
+  val startMillis = Math.min(System.currentTimeMillis(), endMillis - 1)
 }
 
 // A node in the search tree
