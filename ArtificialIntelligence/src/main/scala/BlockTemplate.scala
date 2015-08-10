@@ -4,7 +4,7 @@ import scala.collection.mutable.ArrayBuffer
 object BlockTemplate {
   def fromJsonObject(jsonObject: JsObject): BlockTemplate = {
     // We ignore potential invalid JSON, hence the @unchecked.
-    
+
     val membersWithPivotAtOrigin = ArrayBuffer.empty[HexCell]
     jsonObject.getFields("pivot", "members") match { case Seq(pivotObject: JsObject, JsArray(members)) =>
       val pivot = HexCell.fromJsonObject(pivotObject)
@@ -15,13 +15,13 @@ object BlockTemplate {
         }
       }
     }
-    
+
     BlockTemplate(membersWithPivotAtOrigin.toArray)
   }
 }
 
 case class BlockTemplate(members: Array[HexCell]) {
-  
+
   // The number of different rotational positions of this block.
   // Depending on the block symmetry, this can be 1, 2, 3, or 6
   val numRotations = {
@@ -36,5 +36,9 @@ case class BlockTemplate(members: Array[HexCell]) {
       rotatedMembers = rotatedMembers.map(_.rotated(1))
     }
     result
+  }
+
+  override def toString(): String = {
+    "HexCell([" + members.mkString(", ") + "])"
   }
 }

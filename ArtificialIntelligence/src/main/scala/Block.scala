@@ -5,20 +5,21 @@
 object Block {
   def spawn(template: BlockTemplate, width: Int): Block = {
     // Find the extents of the object
-    var leftMost = Int.MaxValue
-    var rightMost = Int.MinValue
-    var topMost = Int.MaxValue
-    template.members.foreach { case cell =>
-      leftMost = leftMost.min(cell.x)
-      rightMost = rightMost.max(cell.x)
-      topMost = topMost.min(cell.y)
-    }
-    
+    val topMost = template.members.map( cell => cell.y ).min
+
+    // Create a temporary Block in the right row, and measure the width.
+    // Note: YES, the width does depend on the row!
+    val blockInCorrectRow = Block(template, HexCell.fromXY(0, -topMost), 0)
+    val leftMost = blockInCorrectRow.transformedCells.map( cell => cell.x ).min
+    val rightMost = blockInCorrectRow.transformedCells.map( cell => cell.x ).max
+
     val blockWidth = rightMost - leftMost + 1
     val spaceAvailable = width - blockWidth
     val pivotY = -topMost
     val pivotX = -leftMost + spaceAvailable / 2
-    
+
+    println("spawn: " + template + ", blockWidth=" + blockWidth + ", pivotY=" + pivotY + ", pivotX=" + pivotX)
+
     Block(template, HexCell.fromXY(pivotX, pivotY), 0)
   }
 }
@@ -31,7 +32,7 @@ case class Block(template: BlockTemplate, pivot: HexCell, rotation: Int) {
       case Moves.CW | Moves.CCW => Block(template, pivot, updatedRotation(move))
     }
   }
-  
+
   private def translatedCell(cell: HexCell, move: Moves.Move): HexCell = {
     move match {
       case Moves.E => cell.translated(HexCell(1, 0))
@@ -44,7 +45,7 @@ case class Block(template: BlockTemplate, pivot: HexCell, rotation: Int) {
 
   private def updatedRotation(move: Moves.Move): Int = {
     move match {
-      case Moves.CW => (rotation + 5) % template.numRotations  
+      case Moves.CW => (rotation + 5) % template.numRotations
       case Moves.CCW => (rotation + 1) % template.numRotations
       case _ => throw new AssertionError("updatedRotation called with translation")
     }
