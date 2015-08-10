@@ -6,7 +6,7 @@ import scala.util.Random
 object SamplingAI {
   // The number of random playouts per move.
   val DEFAULT_NUM_PLAYOUTS_PER_MOVE = 100
-  val MAX_NUM_PLAYOUTS_PER_MOVE = 5000
+  val MAX_NUM_PLAYOUTS_PER_MOVE = 50000
   val MIN_NUM_PLAYOUTS_PER_MOVE = 10
 
   // How much we favor exploration over exploitation.
