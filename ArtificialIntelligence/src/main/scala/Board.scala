@@ -109,6 +109,7 @@ class Board(
     random.seed = currentSourceSeed
     numBlocksPlayed = -1
     blockIndex = -1
+    numMovesDone = 0
     score = 0
     lsOld = 0
     isActive = true
@@ -125,6 +126,8 @@ class Board(
     if (isInvalidMove(move)) {
       throw new InvalidMoveException(moveToString(move) + " leads to repeated position")
     }
+
+    numMovesDone += 1
 
     if (isLockingMove(move)) {
       lockBlock()
@@ -152,6 +155,7 @@ class Board(
   override def toString(): String = {
     "Board(sourceSeedIndex=" + sourceSeedIndex +
       ", numBlocksPlayed=" + numBlocksPlayed +
+      ", numMovesDone=" + numMovesDone +
       ", score=" + score +
       ", lsOld=" + lsOld +
       ", isActive=" + isActive + ")\n" +
@@ -167,6 +171,7 @@ class Board(
     }
     result.sourceSeedIndex = sourceSeedIndex
     result.numBlocksPlayed = numBlocksPlayed
+    result.numMovesDone = numMovesDone
     result.blockIndex = blockIndex
     result.random.seed = random.seed
     result.activeBlock = activeBlock
@@ -350,6 +355,9 @@ class Board(
   // This buffer stores the list of past positions/rotations of the active block.
   // Used to detect invalid moves
   val pastBlockStates = HashSet.empty[Block]
+
+  // How many moves have been played in the current game
+  var numMovesDone = 0
 
   // The score of the current game
   var score = 0

@@ -15,8 +15,8 @@ object SamplingAI {
   // How much we prefer locking moves over other moves (<1 because we prefer others).
   val LOCKING_MOVE_FACTOR = 0.02
 
-  // The maximum amount by which we adjust the number of playouts
-  val ADJUSTMENT_MAGNITUDE = 1.01
+  // The maximum amount by which we adjust the number of playouts per move
+  val MAX_ABSOLUTE_ADJUSTMENT = 20
 
   // Returns an element sampled from `elems` according to the given weights.
   // Weights must be non-negative.
@@ -43,8 +43,8 @@ class SamplingAI(board: Board, endMillis: Long) {
 
     while (root.board.isActive) {
       // Explore the game tree
-      val numPlayoutsAtExplorationStart = numPlayouts
-      while (numPlayouts - numPlayoutsAtExplorationStart < numPlayoutsPerMove) {
+      val numPlayoutsAtExplorationStart = numPlayoutsInTree
+      while (numPlayoutsInTree - numPlayoutsAtExplorationStart < numPlayoutsPerMove) {
         val node = root.selectLeaf()
         node.expand()
         if (node.isLeaf) {
@@ -60,16 +60,20 @@ class SamplingAI(board: Board, endMillis: Long) {
 
       // Perform a move
       val (bestMove, bestChild) = root.bestMove()
-      Options.log("SamplingAI: performed " + numPlayouts + " playouts on board:")
+      Options.log("SamplingAI: performed " +
+          (numPlayoutsInTree - numPlayoutsAtExplorationStart) + "/" + numPlayoutsPerMove +
+          " playouts on board:")
       Options.log("  " + board.toString().replaceAll("\n", "\n  "))
-      Options.log("  Chose move " + bestMove + " with avgScore " + root.avgScore)
+      Options.log("  Chose move " + bestMove +
+          " with avgScore=" + root.avgScore +
+          ", avgMovesDone=" + root.avgMovesDone)
 
       board.doMove(bestMove)
       result += bestMove
 
       // Update the tree. We try to re-use as much of it as possible
       root = bestChild
-      numPlayouts = root.numPlayouts
+      numPlayoutsInTree = root.numPlayouts
 
       adjustNumPlayoutsPerMove()
     }
@@ -81,22 +85,28 @@ class SamplingAI(board: Board, endMillis: Long) {
   private def adjustNumPlayoutsPerMove() {
     val currentMillis = System.currentTimeMillis()
 
-    val fractionOfTimeElapsed =
-      (currentMillis - startMillis).toDouble / (endMillis - startMillis)
-    val fractionOfWorkDone =
-      Math.max(board.numBlocksPlayed.toDouble / board.sourceLength, 1.0 / board.sourceLength)
+    val timeElapsed = (currentMillis - startMillis).toDouble
+    val totalTime = (endMillis - startMillis).toDouble
+    val playoutsPerMilli = numPlayoutsTotal / timeElapsed
 
-    // If we did 20% of work in 30% of the available time, this will be 1.5
-    val estimatedFractionOfTimeNeeded = fractionOfTimeElapsed / fractionOfWorkDone
+    val timeLeft = (endMillis - currentMillis).toDouble
+    val playoutsLeft = timeLeft * playoutsPerMilli
+
+    val movesLeft = (root.avgMovesDone - board.numMovesDone).max(1.0)
+    val targetNumPlayoutsPerMove = playoutsLeft / movesLeft
 
     // Smooth the adjustment, otherwise we react too extremely
-    def limit(value: Double, min: Double, max: Double) =
-      Math.max(Math.min(value, max), min)
+    def limit(value: Double, min: Double, max: Double) = value.min(max).max(min)
 
-    val adjustment = limit(estimatedFractionOfTimeNeeded,
-        1.0 / SamplingAI.ADJUSTMENT_MAGNITUDE, SamplingAI.ADJUSTMENT_MAGNITUDE)
+    val adjustment = limit(targetNumPlayoutsPerMove - numPlayoutsPerMove,
+        -SamplingAI.MAX_ABSOLUTE_ADJUSTMENT, SamplingAI.MAX_ABSOLUTE_ADJUSTMENT)
 
-    numPlayoutsPerMove = limit(numPlayoutsPerMove / adjustment,
+    Options.log("  adjust " + (if (adjustment < 0.0) "v" else "^") +
+        ": elapsed=" + timeElapsed + " (" + 100 * timeElapsed / totalTime + "%) " +
+        ", actual=" + numPlayoutsPerMove +
+        ", target=" + targetNumPlayoutsPerMove)
+
+    numPlayoutsPerMove = limit(numPlayoutsPerMove + adjustment,
         SamplingAI.MIN_NUM_PLAYOUTS_PER_MOVE, SamplingAI.MAX_NUM_PLAYOUTS_PER_MOVE)
   }
 
@@ -104,7 +114,10 @@ class SamplingAI(board: Board, endMillis: Long) {
 	var root: TreeNode = new TreeNode(board, null, this)
 
   // The total number of playouts in the tree
-  var numPlayouts = 0
+  var numPlayoutsInTree = 0
+
+  // The total number of playouts done so far (used for estimating the time it takes)
+  var numPlayoutsTotal = 0
 
   // The number of playouts per move (will be adjusted according to the time limit)
   var numPlayoutsPerMove = SamplingAI.DEFAULT_NUM_PLAYOUTS_PER_MOVE.toDouble
@@ -159,15 +172,17 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
       playRandomMove(playoutBoard)
     }
 
-    updatePlayoutScores(playoutBoard.score)
-    ai.numPlayouts += 1
+    processPlayoutResult(playoutBoard)
+    ai.numPlayoutsInTree += 1
+    ai.numPlayoutsTotal += 1
   }
 
-  private def updatePlayoutScores(score: Int) {
+  private def processPlayoutResult(board: Board) {
     numPlayouts += 1
-    sumScores += score
+    sumScores += board.score
+    sumMovesDone += board.numMovesDone
 
-    if (parent != null) parent.updatePlayoutScores(score)
+    if (parent != null) parent.processPlayoutResult(board)
   }
 
   def bestMove(): (Moves.Move, TreeNode) = {
@@ -190,7 +205,7 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
 
     // Given that our scores are integers rather than win/loss, we normalize them by
     val exploitation = avgScore / ai.root.avgScore
-    val exploration = Math.sqrt(Math.log(ai.numPlayouts) / numPlayouts)
+    val exploration = Math.sqrt(Math.log(ai.numPlayoutsInTree) / numPlayouts)
     exploitation + SamplingAI.EXPLORATION_FACTOR * exploration
   }
 
@@ -246,8 +261,16 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
   // The sum of scores found in all playouts
   var sumScores = 0
 
+  // The sum of all the moves done in all playouts
+  var sumMovesDone = 0
+
   // The average score from all playouts
   def avgScore: Double = {
     if (numPlayouts != 0) sumScores / numPlayouts.toDouble else 0.0
+  }
+
+  // The average number of moves from all playouts
+  def avgMovesDone: Double = {
+    if (numPlayouts != 0) sumMovesDone / numPlayouts.toDouble else 0.0
   }
 }

@@ -1,7 +1,7 @@
 
 object Options {
   var inputFname = ""
-  var timeLimitSeconds = -1
+  var timeLimitSeconds = 60
   var memory = -1
   var cores = -1
   var phrases :Seq[String] = Seq()
@@ -37,7 +37,6 @@ object Options {
           nRepetitions = n.toInt
           parseArgs(tail)
         case "-t" :: t :: tail =>
-          if (timeLimitSeconds != -1) usage("Hmm... got more than one time bounds")
           timeLimitSeconds = t.toInt
           parseArgs(tail)
         case "-m" :: mem :: tail =>
