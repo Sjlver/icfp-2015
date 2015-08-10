@@ -61,12 +61,12 @@ class SamplingAI(board: Board, endMillis: Long) {
       // Perform a move
       val (bestMove, bestChild) = root.bestMove()
       Options.log("SamplingAI: performed " +
-          (numPlayoutsInTree - numPlayoutsAtExplorationStart) + "/" + numPlayoutsPerMove +
+          (numPlayoutsInTree - numPlayoutsAtExplorationStart) + "/" + numPlayoutsPerMove.toInt +
           " playouts on board:")
       Options.log("  " + board.toString().replaceAll("\n", "\n  "))
       Options.log("  Chose move " + bestMove +
-          " with avgScore=" + root.avgScore +
-          ", avgMovesDone=" + root.avgMovesDone)
+          " with avgScore=" + root.avgScore.toInt +
+          ", avgMovesDone=" + root.avgMovesDone.toInt)
 
       board.doMove(bestMove)
       result += bestMove
@@ -76,6 +76,7 @@ class SamplingAI(board: Board, endMillis: Long) {
       numPlayoutsInTree = root.numPlayouts
 
       adjustNumPlayoutsPerMove()
+      Options.log("")
     }
     result
   }
@@ -102,9 +103,9 @@ class SamplingAI(board: Board, endMillis: Long) {
         -SamplingAI.MAX_ABSOLUTE_ADJUSTMENT, SamplingAI.MAX_ABSOLUTE_ADJUSTMENT)
 
     Options.log("  adjust " + (if (adjustment < 0.0) "v" else "^") +
-        ": elapsed=" + timeElapsed + " (" + 100 * timeElapsed / totalTime + "%) " +
-        ", actual=" + numPlayoutsPerMove +
-        ", target=" + targetNumPlayoutsPerMove)
+        ": elapsed=" + timeElapsed.toInt + "ms (" + (100 * timeElapsed / totalTime).toInt + "%) " +
+        ", actual=" + numPlayoutsPerMove.toInt +
+        ", target=" + targetNumPlayoutsPerMove.toInt)
 
     numPlayoutsPerMove = limit(numPlayoutsPerMove + adjustment,
         SamplingAI.MIN_NUM_PLAYOUTS_PER_MOVE, SamplingAI.MAX_NUM_PLAYOUTS_PER_MOVE)
