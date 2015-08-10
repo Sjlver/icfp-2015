@@ -122,23 +122,31 @@ class Board(
       throw new AssertionError("doMove must not be called on an inactive game.")
     }
 
-    val targetBlock = activeBlock.moved(move)
-
-    // Check for moves that would lead to a repeated situation
-    if (pastBlockStates.contains(targetBlock)) {
+    if (isInvalidMove(move)) {
       throw new InvalidMoveException(moveToString(move) + " leads to repeated position")
     }
 
-    // Check for moves the exit the grid
-    if (exitsGrid(targetBlock) || collidesWithFullCell(targetBlock)) {
+    if (isLockingMove(move)) {
       lockBlock()
       return spawnNextBlock()
     }
 
     // All checks passed, move the target
-    activeBlock = targetBlock
+    activeBlock = activeBlock.moved(move)
     pastBlockStates += activeBlock
     true
+  }
+
+  // Determines whether the given move is invalid (i.e., would lead to a repeated situation)
+  def isInvalidMove(move: Moves.Move): Boolean = {
+    val targetBlock = activeBlock.moved(move)
+    pastBlockStates.contains(targetBlock)
+  }
+
+  // Determines whether the given move would lock
+  def isLockingMove(move: Moves.Move): Boolean = {
+    val targetBlock = activeBlock.moved(move)
+    exitsGrid(targetBlock) || collidesWithFullCell(targetBlock)
   }
 
   override def toString(): String = {

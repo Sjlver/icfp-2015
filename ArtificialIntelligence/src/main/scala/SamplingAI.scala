@@ -4,11 +4,29 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 object SamplingAI {
-  // The number of random playouts per move
+  // The number of random playouts per move.
   val NUM_PLAYOUTS = 1000
 
-  // How much we favor exploration over exploitation
+  // How much we favor exploration over exploitation.
   val EXPLORATION_FACTOR = 2.0
+
+  // How much we prefer locking moves over other moves (<1 because we prefer others).
+  val LOCKING_MOVE_FACTOR = 0.02
+
+  // Returns an element sampled from `elems` according to the given weights.
+  // Weights must be non-negative.
+  def weightedRandomSample[T](elems: Seq[T], weights: Seq[Double]): T = {
+    // Compute the cumulative density function.
+    val cdf = Array.fill(elems.size)(0.0)
+    cdf(0) = weights(0)
+    1.to(elems.size - 1).foreach { i =>
+      cdf(i) = cdf(i - 1) + weights(i)
+    }
+
+    val r = Random.nextDouble() * cdf(elems.size - 1)
+    val (_, index) = cdf.zipWithIndex.find(_._1 >= r).get
+    elems(index)
+  }
 }
 
 class SamplingAI(board: Board) {
@@ -92,6 +110,7 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
   }
 
   // Performs a random playout, in order to evaluate the score.
+  // TODO: this is a main source of crappyness in our AI. Make this much better than random.
   def addPlayout() {
     if (!isLeaf) {
       throw new AssertionError("addPlayout must be called on a leaf node.")
@@ -138,19 +157,18 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
   }
 
   // Plays a random move *on the given board*. Returns the move played.
-  private def playRandomMove(b: Board): Moves.Move = {
-    var move = Moves.randomMove()
-    var success = false
-    while (!success) {
-      try {
-        b.doMove(move)
-        success = true
-      } catch {
-        case _: b.InvalidMoveException =>
-          // Try another move
-          move = Moves.randomMove()
+  private def playRandomMove(board: Board): Moves.Move = {
+    val moveWeights = Moves.ALL_MOVES.map { move => 1.0 }
+    Moves.ALL_MOVES.zipWithIndex.foreach { case (move, i) =>
+      if (board.isInvalidMove(move)) {
+        moveWeights(i) = 0.0
+      } else if (board.isLockingMove(move)) {
+        moveWeights(i) *= SamplingAI.LOCKING_MOVE_FACTOR
       }
     }
+
+    val move = SamplingAI.weightedRandomSample(Moves.ALL_MOVES, moveWeights)
+    board.doMove(move)
     move
   }
 
