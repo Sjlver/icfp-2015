@@ -18,6 +18,8 @@ inputfile="$WORKING_DIR/$1"
 tag="$2"
 shift; shift
 
+input_id="$( basename "$inputfile" .json )"
+
 run_ai() {
   printf "Running AI: run-main Main $*" >&2
   result="$( cd ArtificialIntelligence && sbt --warn "run-main Main $*" )"
@@ -40,4 +42,4 @@ cd "$SCRIPT_DIR/.."
 (
   data="$( run_ai -f "$inputfile" -tag "$tag" "$@" )"
   submit "$data"
-) 2>&1 | tee "$SCRIPT_DIR/../logs/$tag.log"
+) 2>&1 | tee "$SCRIPT_DIR/../logs/$tag-$input_id.log"
