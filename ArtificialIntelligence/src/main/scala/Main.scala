@@ -1,5 +1,6 @@
 import java.io.{File, FileWriter, BufferedWriter}
 import scala.collection.mutable.ArrayBuffer
+import spray.json._
 
 object Main {
 
@@ -8,6 +9,8 @@ object Main {
 
     if (Options.inputFiles.isEmpty) return Options.usage("Must specify an input file!")
     Options.timeLimitSeconds /= Options.inputFiles.size
+
+    val allResults = ArrayBuffer.empty[JsValue]
 
     Options.inputFiles.foreach { inputFile =>
       val board = Board.fromJson(scala.io.Source.fromFile(inputFile).getLines.mkString)
@@ -19,8 +22,10 @@ object Main {
         Options.tag,
         Options.timeLimitSeconds)
 
-      val result = aiRunner.run().prettyPrint
-      println(result)
+      val result = aiRunner.run()
+      allResults ++= result.elements
     }
+
+    println(JsArray(allResults: _*).prettyPrint)
   }
 }

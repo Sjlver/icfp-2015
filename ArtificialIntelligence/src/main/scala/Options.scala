@@ -32,6 +32,8 @@ object Options {
       if (mergedArgs(mergedArgs.size - 1).endsWith("\\")) {
         mergedArgs(mergedArgs.size - 1) = mergedArgs(mergedArgs.size - 1).substring(0, mergedArgs.size - 1) + " "
         startNewArg = false
+      } else {
+        startNewArg = true
       }
     }
 
@@ -39,29 +41,35 @@ object Options {
     while (!argsList.isEmpty) {
       argsList = argsList match {
         case "-f" :: fname :: tail =>
+          //System.err.println("input file: " + fname)
           inputFiles += fname
           tail
         case "-v" :: tail =>
+          //System.err.println("verbose")
           verbose = true
           tail
         case "-out" :: fname :: tail =>
+          //System.err.println("output file: " + fname)
           guiJsonOutputFile = fname
           tail
         case "-t" :: t :: tail =>
+          //System.err.println("time limit: " + t.toInt)
           timeLimitSeconds = t.toInt
           tail
         case "-m" :: mem :: tail =>
-          if (memoryLimitMegabytes != -1) usage("Hmm... got more than one memory bounds")
+          //System.err.println("mem limit: " + mem.toInt)
           memoryLimitMegabytes = mem.toInt
           tail
         case "-c" :: c :: tail =>
-          if (numCores != -1) usage("Hmm... got more than one core numbers")
+          //System.err.println("cores: " + c.toInt)
           numCores = c.toInt
           tail
         case "-p" :: phrase :: tail =>
+          //System.err.println("phrase: " + phrase)
           phrasesOfPower += phrase
           tail
         case "-tag" :: t :: tail =>
+          //System.err.println("tag: " + tag)
           tag = t
           tail
         case other =>
