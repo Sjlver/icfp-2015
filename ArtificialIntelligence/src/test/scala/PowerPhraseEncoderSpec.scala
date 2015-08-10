@@ -50,9 +50,36 @@ class PowerPhraseEncoderSpec extends UnitSpec{
     val phrase = "Nola"
     val moves = ("No" + phrase + "lis").map {c => Moves.fromChar(c)}
     val encoder = new PowerPhraseEncoder(moves, Array(phrase))
-    println(encoder.encode)
     encoder.encode contains phrase should be (true)
     encoder.encode map {c => Moves.fromChar(c)} should be (moves)
   }
   
+  "A PowerPhraseEncoder" should "prefer a longer power phrase over a shorter one" in {
+    val longPhrase = "olololo"
+    val shortPhrase = "mnm" //m, o, l all correspond to the same moves
+    val moves = longPhrase.map(Moves.fromChar)
+    val encoder1 = new PowerPhraseEncoder(moves, Array(shortPhrase, longPhrase))
+    println(encoder1.encode)
+    encoder1.encode contains longPhrase should be (true)
+    encoder1.encode map(Moves.fromChar) should be (moves)
+    
+    val encoder2 = new PowerPhraseEncoder(moves, Array(longPhrase, shortPhrase))
+    encoder2.encode contains longPhrase should be (true)
+    encoder2.encode map(Moves.fromChar) should be (moves)
+  }
+  /*
+  //TODO: actually mmmmmml is better than olololo in this case
+  "A PowerPhraseEncoder" should "prefer a longer power phrase over a shorter one" in {
+    val longPhrase = "olololo"
+    val shortPhrase = "mm" //m, o, l all correspond to the same moves
+    val moves = longPhrase.map(Moves.fromChar)
+    val encoder1 = new PowerPhraseEncoder(moves, Array(shortPhrase, longPhrase))
+    println(encoder1.encode)
+    encoder1.encode contains longPhrase should be (true)
+    encoder1.encode map(Moves.fromChar) should be (moves)
+    
+    val encoder2 = new PowerPhraseEncoder(moves, Array(longPhrase, shortPhrase))
+    encoder2.encode contains longPhrase should be (true)
+    encoder2.encode map(Moves.fromChar) should be (moves)
+  }*/
 }

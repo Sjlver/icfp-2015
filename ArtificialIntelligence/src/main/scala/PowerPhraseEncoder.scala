@@ -1,8 +1,9 @@
 // Encodes a sequence of moves into a string, trying to maximize the power.
 class PowerPhraseEncoder(moves: Iterable[Moves.Move], phrasesIterable: Iterable[String]) {
-  val phrases = phrasesIterable.filter({phrase => phrase forall (Moves.isValidMoveChar(_))}).toArray
-  val movePhrases = phrases map {phrase =>
-    phrase map {c => Moves.fromChar(c)}}
+  val phrases = phrasesIterable.filter({phrase => phrase forall (Moves.isValidMoveChar(_))})
+                .toArray
+                .sortBy(-_.length)
+  val movePhrases = phrases map (phrase =>  phrase map {c => Moves.fromChar(c)})
   
   def MoveChars(move: Moves.Move) :String = move match {
     case Moves.W => "p!.03\'P"
@@ -21,11 +22,8 @@ class PowerPhraseEncoder(moves: Iterable[Moves.Move], phrasesIterable: Iterable[
   }
   
   def encode(): String = {
-    var result = movesStr
-    for (i <- 0 until (movePhrasesStr.length)) {
-      val expr = movePhrasesStr(i).r
-      result = expr replaceAllIn(result, phrases(i))
-    }
-    result
+    val phraseReplacements =movePhrasesStr.zip(phrases)
+    phraseReplacements.foldLeft(movesStr)({(str:String, pair) => 
+        val (expr,repl) = pair; expr.r replaceAllIn(str, repl) })
   }
 }

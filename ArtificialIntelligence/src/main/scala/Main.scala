@@ -69,7 +69,7 @@ object Main {
       val aiRunner = new AIRunner(
         board,
         b => new SamplingAI(b),
-        c => new PowerPhraseEncoder(c, Array[String]()),
+        c => new PowerPhraseEncoder(c, phrases),
         new GameToJsonPrinter(outputFname),
         tag)
 
