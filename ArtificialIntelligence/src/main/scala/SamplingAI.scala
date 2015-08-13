@@ -240,7 +240,7 @@ class TreeNode(_board: Board, parent: TreeNode, ai: SamplingAI) {
     val result = new scala.collection.mutable.StringBuilder()
     result ++= "" + avgScore + " = " + sumScores + " / " + numPlayouts + ", UCB: " + upperConfidenceBound
     children.foreach { case (move, child) =>
-      result ++= "\n" + prefix + "  " + move + " => " + child.toStringWithPrefix(prefix + "        ")
+      result ++= "\n" + prefix + "  " + move + " => " + child.toStringWithPrefix(prefix + "  ")
     }
 
     result.toString()
