@@ -5,6 +5,12 @@ int4_t: The team of four interns. Saving the world, one hexagonal cell at a
 time.
 
 
+Usage
+-----
+
+    ./play_icfp2015 -f qualifying_problems/problem6.json -t 150 -v
+
+
 What might interest you about this code
 ---------------------------------------
 
