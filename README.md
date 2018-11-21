@@ -4,6 +4,11 @@ ICFP 2015, Team int4_t
 int4_t: The team of four interns. Saving the world, one hexagonal cell at a
 time.
 
+There is a [blog post about this code][blogpost], where you can see a screencast
+of the AI in action.
+
+[blogpost]: https://blog.purpureus.net/technology/2015/08/11/monte-carlo-tetris-playing.html
+
 
 Usage
 -----
